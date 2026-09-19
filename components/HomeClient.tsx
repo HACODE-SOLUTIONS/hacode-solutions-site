@@ -8,7 +8,8 @@ import { Reveal, FadeIn } from "@/components/Reveal";
 export default function HomeClient() {
   const freeSpecs = devSpecs.filter((s) => !s.isPaid);
   const paidSpecs = devSpecs.filter((s) => s.isPaid);
-  const featuredSpecs = devSpecs.filter((s) => s.popular).slice(0, 3);
+  const featuredFreeSpecs = freeSpecs.filter((s) => s.popular).slice(0, 5);
+  const featuredPaidSpecs = paidSpecs.filter((s) => s.popular);
 
   return (
     <>
@@ -264,19 +265,50 @@ export default function HomeClient() {
         </div>
       </section>
 
-      {/* Featured */}
+      {/* Featured Free DevSpecs */}
       <section className="container mx-auto px-4 py-24">
         <FadeIn>
-          <h2 className="text-2xl font-medium mb-10">Featured DevSpecs</h2>
+          <h2 className="text-2xl font-medium mb-2">Free Starter DevSpecs</h2>
+          <p className="text-gray-400 mb-10 max-w-2xl text-sm">
+            Clone from GitHub and start building with any AI coding assistant.
+          </p>
         </FadeIn>
         <Reveal stagger={0.1}>
           <div className="grid md:grid-cols-3 gap-4 max-w-6xl mx-auto">
-            {featuredSpecs.map((spec) => (
+            {featuredFreeSpecs.map((spec) => (
               <DevSpecCard key={spec.id} spec={spec} />
             ))}
           </div>
         </Reveal>
       </section>
+
+      {/* Featured Paid Product - Hero Upsell */}
+      {featuredPaidSpecs.length > 0 && (
+        <section className="container mx-auto px-4 py-24">
+          <FadeIn>
+            <div className="text-center mb-16">
+              <div className="inline-block px-3 py-1 border border-brand-purple text-brand-purple text-xs rounded-full mb-4">
+                PREMIUM
+              </div>
+              <h2 className="text-3xl font-medium mb-4">
+                Ready to wire it all together?
+              </h2>
+              <p className="text-gray-400 max-w-2xl mx-auto text-sm leading-relaxed">
+                The SaaS Launch Kit integrates Auth.js, Stripe, and Next.js App
+                Router into one complete production path. Goes beyond individual
+                starters to provide the full integration architecture.
+              </p>
+            </div>
+          </FadeIn>
+          <Reveal>
+            <div className="max-w-3xl mx-auto">
+              {featuredPaidSpecs.map((spec) => (
+                <DevSpecCard key={spec.id} spec={spec} />
+              ))}
+            </div>
+          </Reveal>
+        </section>
+      )}
 
       {/* CTA */}
       <FadeIn>
