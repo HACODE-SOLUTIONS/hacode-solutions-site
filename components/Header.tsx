@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Header() {
   return (
@@ -6,8 +7,14 @@ export default function Header() {
       <nav className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
-              <span className="text-black font-bold text-sm">HA</span>
+            <div className="w-8 h-8 relative">
+              <Image
+                src="/logo.webp"
+                alt="HACODE SOLUTIONS"
+                width={32}
+                height={32}
+                className="rounded"
+              />
             </div>
             <span className="text-lg font-medium">HACODE SOLUTIONS</span>
           </Link>

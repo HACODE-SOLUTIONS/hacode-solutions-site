@@ -10,6 +10,15 @@ export const metadata: Metadata = {
   title: "HACODE SOLUTIONS - Premium DevSpec Packs for AI Coding Agents",
   description:
     "Build production-ready applications faster with comprehensive DevSpec packs designed for AI coding agents like Cursor, Claude Code, and Gemini.",
+  icons: {
+    icon: [
+      { url: "/logo.png", sizes: "32x32", type: "image/png" },
+      { url: "/logo.webp", sizes: "32x32", type: "image/webp" },
+    ],
+    apple: [
+      { url: "/logo.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
 };
 
 export default function RootLayout({

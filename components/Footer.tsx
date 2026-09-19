@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Footer() {
   return (
@@ -7,8 +8,14 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-6 h-6 bg-white rounded flex items-center justify-center">
-                <span className="text-black font-bold text-xs">HA</span>
+              <div className="w-6 h-6 relative">
+                <Image
+                  src="/logo.webp"
+                  alt="HACODE SOLUTIONS"
+                  width={24}
+                  height={24}
+                  className="rounded"
+                />
               </div>
               <span className="font-medium text-sm">HACODE SOLUTIONS</span>
             </div>
