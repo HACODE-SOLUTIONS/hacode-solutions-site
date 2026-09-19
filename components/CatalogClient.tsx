@@ -3,6 +3,7 @@
 import { useState } from "react";
 import DevSpecCard from "@/components/DevSpecCard";
 import { devSpecs } from "@/data/devspecs";
+import { Reveal } from "@/components/Reveal";
 
 export default function CatalogClient() {
   const [filter, setFilter] = useState<"all" | "free" | "paid">("all");
@@ -49,11 +50,13 @@ export default function CatalogClient() {
         </button>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredSpecs.map((spec) => (
-          <DevSpecCard key={spec.id} spec={spec} />
-        ))}
-      </div>
+      <Reveal stagger={0.08} key={filter}>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredSpecs.map((spec) => (
+            <DevSpecCard key={spec.id} spec={spec} />
+          ))}
+        </div>
+      </Reveal>
 
       {filteredSpecs.length === 0 && (
         <div className="text-center py-16 text-gray-600 text-sm">
