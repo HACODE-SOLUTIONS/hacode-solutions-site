@@ -1,6 +1,7 @@
 import { DevSpec } from "@/types";
 
 export const devSpecs: DevSpec[] = [
+  // FREE DevSpecs
   {
     id: "1",
     slug: "nextjs-app-router-starter",
@@ -121,6 +122,51 @@ export const devSpecs: DevSpec[] = [
     whoFor: "AI agents translating design specifications into UI components",
     fileCount: 7,
     category: "Design Systems",
+    popular: true,
+  },
+
+  // PAID Hero Product
+  {
+    id: "6",
+    slug: "saas-launch-kit",
+    name: "SaaS Launch Kit",
+    description: "Complete production SaaS blueprint integrating Auth.js OAuth, Stripe billing, and Next.js App Router into one cohesive launch path.",
+    longDescription: "The ultimate DevSpec for launching a production SaaS application. This comprehensive pack integrates Auth.js OAuth authentication, Stripe Checkout + webhook billing, and Next.js 14 App Router into a single, cohesive build path. Goes beyond individual components to provide the complete integration architecture, user flows, database schema, and deployment strategy. Includes DEVSPEC.md, SKILL.md, complete file tree, acceptance tests, and AI agent prompts. Perfect for AI agents that have cloned the free starters and are ready to wire everything together into a revenue-generating SaaS product.",
+    isPaid: true,
+    price: 199,
+    stripePriceId: process.env.STRIPE_PRICE_ID_SAAS_LAUNCH_KIT || "",
+    features: [
+      "Complete Auth.js OAuth integration (GitHub, Google, Discord)",
+      "Stripe Checkout + subscription billing with webhooks",
+      "Next.js 14 App Router production architecture",
+      "User dashboard with account management",
+      "Protected routes and API endpoints",
+      "Database schema (Prisma) with migrations",
+      "Email notifications setup (Resend/SendGrid)",
+      "Subscription management UI",
+      "Usage tracking and metering patterns",
+      "Admin panel foundations",
+      "Multi-tenant architecture patterns",
+      "Comprehensive acceptance tests",
+      "AI agent prompt templates",
+      "Deployment guides (Vercel, Railway, Fly.io)",
+      "Environment configuration",
+      "Error tracking setup (Sentry)",
+    ],
+    stack: [
+      "Next.js 14",
+      "Auth.js",
+      "Stripe",
+      "Prisma",
+      "PostgreSQL",
+      "TypeScript",
+      "Tailwind CSS",
+      "Resend",
+    ],
+    diyTime: "3-4 weeks",
+    whoFor: "AI agents building complete production SaaS applications with auth and payments",
+    fileCount: 45,
+    category: "SaaS Framework",
     popular: true,
   },
 ];
