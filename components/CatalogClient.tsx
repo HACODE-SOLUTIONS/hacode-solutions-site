@@ -16,33 +16,33 @@ export default function CatalogClient() {
 
   return (
     <>
-      <div className="flex gap-4 mb-8 justify-center">
+      <div className="flex gap-3 mb-10 justify-center">
         <button
           onClick={() => setFilter("all")}
-          className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
+          className={`px-5 py-2 rounded text-xs font-medium transition-colors ${
             filter === "all"
-              ? "bg-brand-purple"
-              : "bg-brand-gray hover:bg-brand-gray/80"
+              ? "bg-white text-black"
+              : "border border-brand-border hover:border-gray-600"
           }`}
         >
-          All DevSpecs
+          All
         </button>
         <button
           onClick={() => setFilter("free")}
-          className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
+          className={`px-5 py-2 rounded text-xs font-medium transition-colors ${
             filter === "free"
-              ? "bg-green-600"
-              : "bg-brand-gray hover:bg-brand-gray/80"
+              ? "bg-white text-black"
+              : "border border-brand-border hover:border-gray-600"
           }`}
         >
           Free
         </button>
         <button
           onClick={() => setFilter("paid")}
-          className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
+          className={`px-5 py-2 rounded text-xs font-medium transition-colors ${
             filter === "paid"
-              ? "bg-brand-purple"
-              : "bg-brand-gray hover:bg-brand-gray/80"
+              ? "bg-white text-black"
+              : "border border-brand-border hover:border-gray-600"
           }`}
         >
           Premium
@@ -56,7 +56,7 @@ export default function CatalogClient() {
       </div>
 
       {filteredSpecs.length === 0 && (
-        <div className="text-center py-12 text-gray-400">
+        <div className="text-center py-16 text-gray-600 text-sm">
           No DevSpecs found for this filter.
         </div>
       )}

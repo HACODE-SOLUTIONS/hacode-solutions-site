@@ -51,7 +51,7 @@ export default function CheckoutButton({
     <button
       onClick={handleCheckout}
       disabled={loading}
-      className="w-full bg-brand-purple hover:bg-purple-600 px-8 py-4 rounded-lg font-bold text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      className="w-full bg-white text-black hover:bg-gray-200 px-6 py-3 rounded text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {loading ? "Loading..." : "Purchase DevSpec"}
     </button>

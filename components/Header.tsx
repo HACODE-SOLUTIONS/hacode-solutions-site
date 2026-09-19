@@ -2,44 +2,44 @@ import Link from "next/link";
 
 export default function Header() {
   return (
-    <header className="border-b border-brand-gray sticky top-0 bg-brand-darker/95 backdrop-blur-sm z-50">
+    <header className="border-b border-brand-border sticky top-0 bg-brand-black/95 backdrop-blur-sm z-50">
       <nav className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-brand-purple to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">HA</span>
+          <Link href="/" className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
+              <span className="text-black font-bold text-sm">HA</span>
             </div>
-            <span className="text-xl font-bold">HACODE SOLUTIONS</span>
+            <span className="text-lg font-medium">HACODE SOLUTIONS</span>
           </Link>
 
           <div className="hidden md:flex items-center gap-8">
             <Link
               href="/catalog"
-              className="hover:text-brand-purple transition-colors"
+              className="text-gray-400 hover:text-white transition-colors text-sm"
             >
               DevSpecs
             </Link>
             <Link
               href="/repositories"
-              className="hover:text-brand-purple transition-colors"
+              className="text-gray-400 hover:text-white transition-colors text-sm"
             >
               Repositories
             </Link>
             <Link
               href="/how-it-works"
-              className="hover:text-brand-purple transition-colors"
+              className="text-gray-400 hover:text-white transition-colors text-sm"
             >
               How It Works
             </Link>
             <Link
               href="/about"
-              className="hover:text-brand-purple transition-colors"
+              className="text-gray-400 hover:text-white transition-colors text-sm"
             >
               About
             </Link>
             <Link
               href="/contact"
-              className="hover:text-brand-purple transition-colors"
+              className="text-gray-400 hover:text-white transition-colors text-sm"
             >
               Contact
             </Link>
@@ -47,7 +47,7 @@ export default function Header() {
 
           <Link
             href="/catalog"
-            className="bg-brand-purple hover:bg-purple-600 px-6 py-2 rounded-lg font-semibold transition-colors"
+            className="bg-white text-black hover:bg-gray-200 px-5 py-2 rounded text-sm font-medium transition-colors"
           >
             Browse DevSpecs
           </Link>

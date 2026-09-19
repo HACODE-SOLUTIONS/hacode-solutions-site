@@ -52,138 +52,138 @@ export default function DevSpecPage({ params }: { params: { slug: string } }) {
         }}
       />
 
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-4 py-24">
         <Link
           href="/catalog"
-          className="text-brand-purple hover:text-purple-400 mb-8 inline-flex items-center gap-2"
+          className="text-gray-500 hover:text-white mb-12 inline-flex items-center gap-2 text-sm transition-colors"
         >
-          ← Back to Catalog
+          ← Back
         </Link>
 
-        <div className="grid lg:grid-cols-3 gap-12 mt-8">
+        <div className="grid lg:grid-cols-3 gap-16 mt-8">
           <div className="lg:col-span-2">
-            <div className="mb-6 flex items-center gap-3">
+            <div className="mb-8 flex items-center gap-3 text-xs">
               {spec.isPaid ? (
-                <span className="inline-block bg-brand-purple px-4 py-2 rounded-full text-sm font-semibold">
-                  ${spec.price} USD
+                <span className="text-gray-400">
+                  ${spec.price}
                 </span>
               ) : (
-                <span className="inline-block bg-green-600 px-4 py-2 rounded-full text-sm font-semibold">
-                  FREE
+                <span className="text-gray-400">
+                  Free
                 </span>
               )}
+              <span className="text-gray-700">·</span>
+              <span className="text-gray-500">{spec.category}</span>
               {spec.popular && (
-                <span className="inline-block bg-purple-600/30 border border-purple-500 px-4 py-2 rounded-full text-sm font-semibold">
-                  POPULAR
-                </span>
+                <>
+                  <span className="text-gray-700">·</span>
+                  <span className="text-gray-500">Popular</span>
+                </>
               )}
-              <span className="text-gray-400 text-sm">{spec.category}</span>
             </div>
 
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">{spec.name}</h1>
-            <p className="text-xl text-gray-300 mb-8 leading-relaxed">
+            <h1 className="text-4xl font-medium mb-6 tracking-tight">{spec.name}</h1>
+            <p className="text-lg text-gray-400 mb-12 leading-relaxed">
               {spec.longDescription}
             </p>
 
-            <div className="bg-brand-gray rounded-xl p-6 mb-8 border border-brand-purple/30">
-              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <span>🤖</span> Works With Any AI Tool
-              </h2>
-              <p className="text-gray-400 mb-4">
-                This DevSpec works with all AI coding assistants and LLMs:
+            <div className="bg-brand-gray rounded border border-brand-border p-6 mb-12">
+              <h2 className="text-sm font-medium mb-3">Works With Any AI Tool</h2>
+              <p className="text-gray-500 mb-4 text-xs leading-relaxed">
+                This DevSpec works with all AI coding assistants and LLMs.
               </p>
               <div className="flex flex-wrap gap-2">
-                <span className="px-3 py-1 bg-brand-darker rounded border border-brand-gray text-sm">
+                <span className="px-2.5 py-1 bg-brand-black rounded border border-brand-border text-xs text-gray-500">
                   Cursor
                 </span>
-                <span className="px-3 py-1 bg-brand-darker rounded border border-brand-gray text-sm">
-                  Claude Code
+                <span className="px-2.5 py-1 bg-brand-black rounded border border-brand-border text-xs text-gray-500">
+                  Claude
                 </span>
-                <span className="px-3 py-1 bg-brand-darker rounded border border-brand-gray text-sm">
-                  GitHub Copilot
+                <span className="px-2.5 py-1 bg-brand-black rounded border border-brand-border text-xs text-gray-500">
+                  Copilot
                 </span>
-                <span className="px-3 py-1 bg-brand-darker rounded border border-brand-gray text-sm">
+                <span className="px-2.5 py-1 bg-brand-black rounded border border-brand-border text-xs text-gray-500">
                   ChatGPT
                 </span>
-                <span className="px-3 py-1 bg-brand-darker rounded border border-brand-gray text-sm">
+                <span className="px-2.5 py-1 bg-brand-black rounded border border-brand-border text-xs text-gray-500">
                   Gemini
                 </span>
-                <span className="px-3 py-1 bg-brand-darker rounded border border-brand-gray text-sm">
+                <span className="px-2.5 py-1 bg-brand-black rounded border border-brand-border text-xs text-gray-500">
                   Any LLM
                 </span>
               </div>
             </div>
 
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold mb-4">What's Included</h2>
-              <ul className="space-y-3">
+            <div className="mb-12">
+              <h2 className="text-lg font-medium mb-4">What's Included</h2>
+              <ul className="space-y-2.5">
                 {spec.features.map((feature, index) => (
-                  <li key={index} className="flex items-start gap-3">
-                    <span className="text-green-500 mt-1 flex-shrink-0">✓</span>
-                    <span className="text-gray-300">{feature}</span>
+                  <li key={index} className="flex items-start gap-3 text-sm">
+                    <span className="text-gray-600 mt-0.5 flex-shrink-0">✓</span>
+                    <span className="text-gray-400 leading-relaxed">{feature}</span>
                   </li>
                 ))}
               </ul>
             </div>
 
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold mb-4">File Structure</h2>
-              <div className="bg-brand-darker rounded-lg p-6 border border-brand-gray">
-                <div className="font-mono text-sm space-y-2">
-                  <div className="text-gray-500 mb-3">
-                    📦 {spec.fileCount} files in this pack
+            <div className="mb-12">
+              <h2 className="text-lg font-medium mb-4">File Structure</h2>
+              <div className="bg-brand-black rounded border border-brand-border p-6">
+                <div className="font-mono text-xs space-y-1.5">
+                  <div className="text-gray-600 mb-3">
+                    {spec.fileCount} files in this pack
                   </div>
-                  <div className="flex items-center gap-2 text-gray-300">
-                    <span className="text-green-400">📄</span>
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <span>📄</span>
                     <span>README.md</span>
-                    <span className="text-gray-500 text-xs">— Setup guide</span>
+                    <span className="text-gray-700">Setup guide</span>
                   </div>
-                  <div className="flex items-center gap-2 text-gray-300">
-                    <span className="text-green-400">📄</span>
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <span>📄</span>
                     <span>DEVSPEC.md</span>
-                    <span className="text-gray-500 text-xs">— AI specifications</span>
+                    <span className="text-gray-700">AI specifications</span>
                   </div>
-                  <div className="flex items-center gap-2 text-gray-300">
-                    <span className="text-brand-purple">📁</span>
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <span>📁</span>
                     <span>src/</span>
-                    <span className="text-gray-500 text-xs">— Source structure</span>
+                    <span className="text-gray-700">Source structure</span>
                   </div>
-                  <div className="flex items-center gap-2 text-gray-300 pl-4">
-                    <span className="text-blue-400">📄</span>
+                  <div className="flex items-center gap-2 text-gray-500 pl-4">
+                    <span>📄</span>
                     <span>app/</span>
-                    <span className="text-gray-500 text-xs">— Application code</span>
+                    <span className="text-gray-700">Application code</span>
                   </div>
-                  <div className="flex items-center gap-2 text-gray-300 pl-4">
-                    <span className="text-blue-400">📄</span>
+                  <div className="flex items-center gap-2 text-gray-500 pl-4">
+                    <span>📄</span>
                     <span>components/</span>
-                    <span className="text-gray-500 text-xs">— React components</span>
+                    <span className="text-gray-700">React components</span>
                   </div>
-                  <div className="flex items-center gap-2 text-gray-300 pl-4">
-                    <span className="text-blue-400">📄</span>
+                  <div className="flex items-center gap-2 text-gray-500 pl-4">
+                    <span>📄</span>
                     <span>lib/</span>
-                    <span className="text-gray-500 text-xs">— Utilities</span>
+                    <span className="text-gray-700">Utilities</span>
                   </div>
-                  <div className="flex items-center gap-2 text-gray-300">
-                    <span className="text-yellow-400">📄</span>
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <span>📄</span>
                     <span>package.json</span>
-                    <span className="text-gray-500 text-xs">— Dependencies</span>
+                    <span className="text-gray-700">Dependencies</span>
                   </div>
-                  <div className="flex items-center gap-2 text-gray-300">
-                    <span className="text-blue-400">📄</span>
-                    <span>Configuration files</span>
-                    <span className="text-gray-500 text-xs">— TypeScript, Tailwind, etc.</span>
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <span>📄</span>
+                    <span>Config files</span>
+                    <span className="text-gray-700">TypeScript, Tailwind, etc.</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold mb-4">Tech Stack</h2>
-              <div className="flex flex-wrap gap-3">
+            <div className="mb-12">
+              <h2 className="text-lg font-medium mb-4">Tech Stack</h2>
+              <div className="flex flex-wrap gap-2">
                 {spec.stack.map((tech) => (
                   <span
                     key={tech}
-                    className="px-4 py-2 bg-brand-gray rounded-lg border border-brand-purple/30 font-semibold"
+                    className="px-3 py-1.5 bg-brand-gray rounded border border-brand-border text-xs text-gray-400"
                   >
                     {tech}
                   </span>
@@ -191,19 +191,19 @@ export default function DevSpecPage({ params }: { params: { slug: string } }) {
               </div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="bg-brand-gray rounded-xl p-6">
-                <h3 className="font-bold mb-2 text-lg">Who It's For</h3>
-                <p className="text-gray-400">{spec.whoFor}</p>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="bg-brand-gray rounded border border-brand-border p-6">
+                <h3 className="font-medium mb-2 text-sm">Who It's For</h3>
+                <p className="text-gray-500 text-xs leading-relaxed">{spec.whoFor}</p>
               </div>
               {spec.diyTime && (
-                <div className="bg-brand-gray rounded-xl p-6">
-                  <h3 className="font-bold mb-2 text-lg">DIY Time Saved</h3>
-                  <p className="text-gray-400">
-                    Building this from scratch: <strong className="text-white">{spec.diyTime}</strong>
+                <div className="bg-brand-gray rounded border border-brand-border p-6">
+                  <h3 className="font-medium mb-2 text-sm">Time Saved</h3>
+                  <p className="text-gray-500 text-xs leading-relaxed">
+                    DIY: <span className="text-white">{spec.diyTime}</span>
                   </p>
-                  <p className="text-sm text-gray-500 mt-2">
-                    With this DevSpec: minutes
+                  <p className="text-gray-600 text-xs mt-1">
+                    With DevSpec: minutes
                   </p>
                 </div>
               )}
@@ -211,41 +211,41 @@ export default function DevSpecPage({ params }: { params: { slug: string } }) {
           </div>
 
           <div className="lg:col-span-1">
-            <div className="bg-brand-gray rounded-xl p-6 sticky top-24 border border-brand-purple/30">
+            <div className="bg-brand-gray rounded border border-brand-border p-6 sticky top-24">
               <div className="mb-6">
-                <div className="text-sm text-gray-400 mb-2">Package Contents</div>
-                <div className="text-2xl font-bold mb-1">{spec.fileCount} files</div>
-                <div className="text-sm text-gray-400">
+                <div className="text-xs text-gray-600 mb-1">Package</div>
+                <div className="text-xl font-medium mb-1">{spec.fileCount} files</div>
+                <div className="text-xs text-gray-600">
                   Specs + scaffolds + config
                 </div>
               </div>
 
-              <div className="mb-6">
-                <div className="text-sm text-gray-400 mb-2">Category</div>
-                <div className="font-semibold">{spec.category}</div>
+              <div className="mb-6 pb-6 border-b border-brand-border">
+                <div className="text-xs text-gray-600 mb-1">Category</div>
+                <div className="font-medium text-sm">{spec.category}</div>
               </div>
 
               {spec.isPaid && spec.stripePriceId ? (
                 <>
-                  <div className="mb-6 pb-6 border-b border-brand-darker">
-                    <div className="text-3xl font-bold mb-2">${spec.price}</div>
-                    <div className="text-sm text-gray-400">
-                      One-time purchase • Lifetime access
+                  <div className="mb-6">
+                    <div className="text-2xl font-medium mb-1">${spec.price}</div>
+                    <div className="text-xs text-gray-600">
+                      One-time • Lifetime access
                     </div>
                   </div>
                   <CheckoutButton
                     priceId={spec.stripePriceId}
                     productName={spec.name}
                   />
-                  <div className="mt-4 text-xs text-gray-400 text-center">
-                    Secure checkout powered by Stripe
+                  <div className="mt-3 text-xs text-gray-600 text-center">
+                    Secure checkout via Stripe
                   </div>
                 </>
               ) : (
                 <>
-                  <div className="mb-6 pb-6 border-b border-brand-darker">
-                    <div className="text-3xl font-bold mb-2 text-green-500">Free</div>
-                    <div className="text-sm text-gray-400">
+                  <div className="mb-6">
+                    <div className="text-2xl font-medium mb-1">Free</div>
+                    <div className="text-xs text-gray-600">
                       Open source • MIT License
                     </div>
                   </div>
@@ -253,29 +253,29 @@ export default function DevSpecPage({ params }: { params: { slug: string } }) {
                     href={spec.githubUrl || "#"}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block w-full bg-green-600 hover:bg-green-700 px-8 py-4 rounded-lg font-bold text-lg transition-colors text-center"
+                    className="block w-full bg-white text-black hover:bg-gray-200 px-6 py-3 rounded text-sm font-medium transition-colors text-center"
                   >
                     View on GitHub
                   </Link>
-                  <div className="mt-4 text-xs text-gray-400 text-center">
-                    Clone or download • Start building
+                  <div className="mt-3 text-xs text-gray-600 text-center">
+                    Clone or download
                   </div>
                 </>
               )}
 
-              <div className="mt-6 pt-6 border-t border-brand-darker">
-                <div className="text-sm font-semibold mb-3">Instant Delivery</div>
-                <div className="space-y-2 text-sm text-gray-400">
+              <div className="mt-6 pt-6 border-t border-brand-border">
+                <div className="text-xs font-medium mb-3">Instant Delivery</div>
+                <div className="space-y-2 text-xs text-gray-600">
                   <div className="flex items-center gap-2">
-                    <span className="text-green-500">✓</span>
+                    <span className="text-gray-500">✓</span>
                     <span>Complete file structure</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-green-500">✓</span>
+                    <span className="text-gray-500">✓</span>
                     <span>AI-ready specifications</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-green-500">✓</span>
+                    <span className="text-gray-500">✓</span>
                     <span>Production patterns</span>
                   </div>
                 </div>
