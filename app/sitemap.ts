@@ -1,8 +1,9 @@
 import { MetadataRoute } from "next";
 import { devSpecs } from "@/data/devspecs";
+import { getSiteUrl } from "@/lib/seo";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://hacode.solutions";
+  const siteUrl = getSiteUrl();
 
   const staticPages = [
     "",
