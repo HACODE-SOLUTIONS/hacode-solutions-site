@@ -169,6 +169,41 @@ export const devSpecs: DevSpec[] = [
     category: "SaaS Framework",
     popular: true,
   },
+
+  // PAID Mid-Catalog DevSpecs
+  {
+    id: "7",
+    slug: "mvp-auth-stripe-billing",
+    name: "MVP Auth + Stripe Billing DevSpec Pack",
+    description: "Hand Cursor or Claude Code a production Auth + Stripe Billing DevSpec and ship a working paid signup path in one focused day—without inventing webhooks or entitlements from scratch.",
+    longDescription: "A focused DevSpec pack that guides AI coding agents through building a production-ready Auth → Checkout → Entitlement flow. Combines Auth.js authentication with Stripe Checkout and webhooks into one clear specification. Includes DEVSPEC.md with composed system brief, SKILL.md for Claude Code/Cursor integration, entitlements matrix, webhook + idempotency checklist, acceptance tests, and annotated agent run examples. Perfect for solo founders and small teams who need a finished money path this week without thrashing through integration patterns.",
+    isPaid: true,
+    price: 49,
+    stripePriceId: process.env.STRIPE_PRICE_ID_MVP_AUTH_STRIPE_BILLING || "",
+    features: [
+      "START-HERE.md — Tool setup and invocation guide for Cursor/Claude Code",
+      "DEVSPEC.md — Composed Auth + Stripe Billing system specification",
+      "Problem, goal, non-goals, and stack constraints (Next.js + Auth.js + Stripe)",
+      "Data model: user, session, customer, subscription/payment, entitlement",
+      "API contracts: checkout session, webhook handling, gated routes",
+      "Edge cases and error state handling patterns",
+      "SKILL.md — Claude Code skill + .cursorrules for this pack",
+      "Module map: How free HACODE Auth + Stripe packs compose into one sequence",
+      "Entitlements matrix: Free → Paid event-driven access gates",
+      "Webhook + idempotency implementation checklist",
+      "3 annotated before/after agent runs (vague prompt vs DevSpec-driven)",
+      ".env.example patterns + secrets checklist",
+      "Smoke-test outline: signup → checkout → webhook → gated route",
+      "Human-dev handoff guide (if AI stalls)",
+      "FAQ and common integration footguns",
+    ],
+    stack: ["Next.js", "Auth.js", "Stripe", "TypeScript"],
+    diyTime: "8-20 hours",
+    whoFor: "Solo founders, freelancers, and small agencies using AI coding tools who need a finished Auth → Checkout → Entitlement path this week",
+    fileCount: 15,
+    category: "Payments",
+    popular: true,
+  },
 ];
 
 export function getDevSpecBySlug(slug: string): DevSpec | undefined {

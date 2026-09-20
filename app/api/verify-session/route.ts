@@ -7,6 +7,18 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2023-10-16",
 });
 
+// Check if a product is downloadable
+function isDownloadableProduct(productName: string): boolean {
+  const normalizedName = productName.toLowerCase();
+  
+  // List of downloadable products
+  return (
+    normalizedName.includes("saas launch kit") ||
+    normalizedName.includes("mvp auth") ||
+    normalizedName.includes("ship the money path")
+  );
+}
+
 export async function GET(request: NextRequest) {
   try {
     const sessionId = request.nextUrl.searchParams.get("session_id");
@@ -29,9 +41,9 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Check if this is for a downloadable product (SaaS Launch Kit)
+    // Check if this is for a downloadable product
     const productName = session.metadata?.productName || "";
-    const isDownloadable = productName.toLowerCase().includes("saas launch kit");
+    const isDownloadable = isDownloadableProduct(productName);
 
     return NextResponse.json({
       valid: true,

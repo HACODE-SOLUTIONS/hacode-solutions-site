@@ -5,6 +5,26 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { FadeIn } from "@/components/Reveal";
 
+// Helper to get filename from product name
+function getDownloadFilename(productName: string): string {
+  const normalizedName = productName.toLowerCase();
+  
+  if (normalizedName.includes("saas launch kit")) {
+    return "saas-launch-kit-devspec.zip";
+  }
+  
+  if (normalizedName.includes("mvp auth") || normalizedName.includes("ship the money path")) {
+    return "mvp-auth-stripe-billing-devspec.zip";
+  }
+  
+  // Fallback: create slug from product name
+  const slug = productName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+  return `${slug}-devspec.zip`;
+}
+
 export default function SuccessClient() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
@@ -60,7 +80,7 @@ export default function SuccessClient() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "saas-launch-kit-devspec.zip";
+      a.download = getDownloadFilename(productName || "devspec");
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
