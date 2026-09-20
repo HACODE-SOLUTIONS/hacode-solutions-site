@@ -255,9 +255,15 @@ export default function DevSpecPage({ params }: { params: { slug: string } }) {
                   <CheckoutButton
                     priceId={spec.stripePriceId}
                     productName={spec.name}
+                    productSlug={spec.slug}
                   />
                   <div className="mt-3 text-xs text-gray-600 text-center">
                     Secure checkout via Stripe
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-brand-border">
+                    <p className="text-xs text-gray-500 text-center leading-relaxed">
+                      7-day refund if the pack isn't useful. Email support with your order email.
+                    </p>
                   </div>
                 </>
               ) : (

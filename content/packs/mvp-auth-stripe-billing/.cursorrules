@@ -1,0 +1,50 @@
+# .cursorrules — MVP Auth + Stripe Billing DevSpec Pack
+
+You are implementing the composed Auth + Stripe Billing money path for a Next.js App Router app using this pack as the source of truth.
+
+## Source of truth (read in order)
+1. DEVSPEC.md
+2. MODULE-MAP.md
+3. ENTITLEMENTS.md
+4. ENV-EXAMPLE.md
+5. WEBHOOK-IDEMPOTENCY-CHECKLIST.md
+6. SMOKE-TEST.md
+
+## Stack locks (do not substitute without explicit user override)
+- Next.js App Router + TypeScript
+- Auth.js / NextAuth v5 with JWT sessions
+- Stripe Checkout in subscription mode (one STRIPE_PRICE_ID)
+- Stripe webhooks with signature verification
+- Prisma (SQLite OK locally; Postgres for production notes)
+- Entitlement key: "pro" (subscription-primary)
+
+## Composition order
+starter → auth → stripe → entitlements glue
+
+Free module references:
+- https://github.com/HACODE-SOLUTIONS/nextjs-app-router-starter
+- https://github.com/HACODE-SOLUTIONS/auth-nextauth-oauth
+- https://github.com/HACODE-SOLUTIONS/stripe-checkout-webhooks
+
+## Hard rules
+- Do NOT scaffold a full Next.js app inside the pack folder; edit the user's application repo.
+- Do NOT grant paid access based only on Checkout success_url query parameters.
+- Do NOT skip webhook signature verification.
+- Do NOT skip event.id idempotency.
+- Do NOT treat "signed in" as "paid"; gate paid routes with entitlements.
+- Do NOT add multi-tenant orgs, seats, or usage billing unless the user explicitly expands scope.
+- Do NOT commit secrets or put real keys into markdown samples.
+- Do NOT weaken security to make a demo pass.
+
+## Implementation preferences
+- Attach metadata.userId (and client_reference_id) on every Checkout Session.
+- Persist StripeCustomer, Subscription, Entitlement, StripeEvent as in DEVSPEC.md.
+- Auth middleware: authentication only; entitlement checks in server components / route handlers.
+- Prefer Customer Portal for cancel/manage after first subscription.
+- Match AUTH_* env naming from ENV-EXAMPLE.md unless the repo already standardized otherwise — then document, don't thrash.
+
+## When stuck
+After two failed attempts on the same blocker, stop looping. Summarize for a human using HANDOFF-HUMAN-DEV.md structure (symptom, tried, logs, next check).
+
+## Done means
+SMOKE-TEST.md passes in Stripe test mode; WEBHOOK-IDEMPOTENCY-CHECKLIST.md critical boxes checked; paid route locked for free users and open for entitled users.

@@ -169,6 +169,43 @@ export const devSpecs: DevSpec[] = [
     category: "SaaS Framework",
     popular: true,
   },
+
+  // PAID Mid-Catalog DevSpecs
+  {
+    id: "7",
+    slug: "mvp-auth-stripe-billing",
+    name: "MVP Auth + Stripe Billing DevSpec Pack",
+    description: "Hand Cursor or Claude Code a production Auth + Stripe Billing DevSpec and ship a working paid signup path in one focused day—without inventing webhooks or entitlements from scratch.",
+    longDescription: "A focused DevSpec pack that composes free HACODE starter + Auth.js + Stripe modules and adds the entitlements matrix and webhook idempotency checklist agents skip. Includes explicit 10-minute path: signed-in → Checkout → verified webhook → gated route (never grant from success_url). Delivered as markdown + skill files with env patterns, smoke test, human-dev handoff, Cursor rules + Claude skill, and three annotated vague-vs-DevSpec runs. Stack locked: Next.js App Router · Auth.js v5 (JWT) · Stripe Checkout subscriptions · Prisma. Not a Notion template, not a prompt dump, not a full multi-tenant boilerplate.",
+    isPaid: true,
+    price: 49,
+    stripePriceId: process.env.STRIPE_PRICE_ID_MVP_AUTH_STRIPE_BILLING || "",
+    features: [
+      "START-HERE.md with 10-minute path: sign in → checkout → webhook → gated route",
+      "DEVSPEC.md — Composed Auth + Stripe Billing system specification",
+      "SKILL.md + .cursorrules — Claude Code skill and Cursor integration",
+      "MODULE-MAP.md — Order for composing free HACODE Auth + Stripe packs",
+      "ENTITLEMENTS.md — Free → Paid event-driven access gates (never grant from success_url)",
+      "WEBHOOK-IDEMPOTENCY-CHECKLIST.md — Prevent duplicate entitlements",
+      "ENV-EXAMPLE.md — Environment patterns and secrets checklist",
+      "SMOKE-TEST.md — Step-by-step verification path",
+      "HANDOFF-HUMAN-DEV.md — What to do if AI stalls",
+      "CHECKLIST.md — Complete implementation checklist",
+      "FAQ.md — Common integration footguns and limits",
+      "SAMPLE.md — Redacted 10-minute stranger walkthrough",
+      "SAMPLES/ — 3 annotated before/after agent runs (vague vs DevSpec-driven)",
+      "CONTENTS.md — Full file inventory",
+      "Stack: Next.js App Router, Auth.js v5 JWT, Stripe Checkout subscriptions, Prisma",
+      "Auth gate vs entitlement gate separation patterns",
+      "Production webhook signature verification",
+    ],
+    stack: ["Next.js App Router", "Auth.js v5", "Stripe", "Prisma", "TypeScript"],
+    diyTime: "8-20 hours",
+    whoFor: "Solo founders, freelancers, and small agencies using AI coding tools who need a finished Auth → Checkout → Entitlement path this week",
+    fileCount: 17,
+    category: "Payments",
+    popular: true,
+  },
 ];
 
 export function getDevSpecBySlug(slug: string): DevSpec | undefined {

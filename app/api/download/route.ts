@@ -6,6 +6,21 @@ import AdmZip from "adm-zip";
 
 export const dynamic = "force-dynamic";
 
+// Map product names to their slug and pack folder
+function getProductSlug(productName: string): string | null {
+  const normalizedName = productName.toLowerCase();
+  
+  if (normalizedName.includes("saas launch kit")) {
+    return "saas-launch-kit";
+  }
+  
+  if (normalizedName.includes("mvp auth") || normalizedName.includes("ship the money path")) {
+    return "mvp-auth-stripe-billing";
+  }
+  
+  return null;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const sessionId = request.nextUrl.searchParams.get("session_id");
@@ -28,18 +43,29 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check which product was purchased from metadata
-    const productSlug = session.metadata?.productName;
+    // Get the product slug from metadata (prefer explicit slug, fallback to name mapping)
+    const productSlug = session.metadata?.productSlug;
+    const productName = session.metadata?.productName;
     
-    if (!productSlug || !productSlug.toLowerCase().includes("saas launch kit")) {
+    let finalSlug: string | null = null;
+    
+    if (productSlug) {
+      // Use explicit slug if provided
+      finalSlug = productSlug;
+    } else if (productName) {
+      // Fallback to name mapping for backward compatibility
+      finalSlug = getProductSlug(productName);
+    }
+    
+    if (!finalSlug) {
       return NextResponse.json(
         { error: "This session is not for a downloadable product" },
         { status: 403 }
       );
     }
 
-    // Path to the SaaS Launch Kit content
-    const packPath = join(process.cwd(), "content", "packs", "saas-launch-kit");
+    // Path to the product pack content
+    const packPath = join(process.cwd(), "content", "packs", finalSlug);
 
     if (!existsSync(packPath)) {
       return NextResponse.json(
@@ -57,12 +83,14 @@ export async function GET(request: NextRequest) {
     // Generate the zip buffer
     const zipBuffer = zip.toBuffer();
 
-    // Return the zip file
+    // Return the zip file with product-specific filename
+    const filename = `${finalSlug}-devspec.zip`;
+    
     return new NextResponse(new Uint8Array(zipBuffer), {
       status: 200,
       headers: {
         "Content-Type": "application/zip",
-        "Content-Disposition": 'attachment; filename="saas-launch-kit-devspec.zip"',
+        "Content-Disposition": `attachment; filename="${filename}"`,
         "Content-Length": zipBuffer.length.toString(),
       },
     });
