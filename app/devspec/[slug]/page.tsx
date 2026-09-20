@@ -4,6 +4,7 @@ import { devSpecs } from "@/data/devspecs";
 import CheckoutButton from "@/components/CheckoutButton";
 import { generateSEO, generateProductJsonLd } from "@/lib/seo";
 import { FadeIn, Reveal } from "@/components/Reveal";
+import ProofStrip from "@/components/ProofStrip";
 
 export async function generateStaticParams() {
   return devSpecs.map((spec) => ({
@@ -205,6 +206,8 @@ export default function DevSpecPage({ params }: { params: { slug: string } }) {
                 </div>
               </div>
             </FadeIn>
+
+            {spec.slug === "mvp-auth-stripe-billing" && <ProofStrip />}
 
             <Reveal stagger={0.1}>
               <div className="grid md:grid-cols-2 gap-4">
