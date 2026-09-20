@@ -3,7 +3,7 @@ import Stripe from "stripe";
 
 export async function POST(request: NextRequest) {
   try {
-    const { priceId, productName } = await request.json();
+    const { priceId, productName, productSlug } = await request.json();
 
     // Validate required environment variables
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
@@ -45,6 +45,7 @@ export async function POST(request: NextRequest) {
       cancel_url: `${baseUrl}/catalog`,
       metadata: {
         productName,
+        productSlug: productSlug || "",
       },
     });
 

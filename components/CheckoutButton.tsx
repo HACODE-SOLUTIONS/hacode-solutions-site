@@ -10,11 +10,13 @@ const stripePromise = loadStripe(
 interface CheckoutButtonProps {
   priceId: string;
   productName: string;
+  productSlug?: string;
 }
 
 export default function CheckoutButton({
   priceId,
   productName,
+  productSlug,
 }: CheckoutButtonProps) {
   const [loading, setLoading] = useState(false);
 
@@ -30,6 +32,7 @@ export default function CheckoutButton({
         body: JSON.stringify({
           priceId,
           productName,
+          productSlug,
         }),
       });
 

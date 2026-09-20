@@ -43,20 +43,21 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get the product name from metadata
+    // Get the product slug from metadata (prefer explicit slug, fallback to name mapping)
+    const productSlug = session.metadata?.productSlug;
     const productName = session.metadata?.productName;
     
-    if (!productName) {
-      return NextResponse.json(
-        { error: "Product information missing" },
-        { status: 403 }
-      );
-    }
-
-    // Get the product slug
-    const productSlug = getProductSlug(productName);
+    let finalSlug: string | null = null;
     
-    if (!productSlug) {
+    if (productSlug) {
+      // Use explicit slug if provided
+      finalSlug = productSlug;
+    } else if (productName) {
+      // Fallback to name mapping for backward compatibility
+      finalSlug = getProductSlug(productName);
+    }
+    
+    if (!finalSlug) {
       return NextResponse.json(
         { error: "This session is not for a downloadable product" },
         { status: 403 }
@@ -64,7 +65,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Path to the product pack content
-    const packPath = join(process.cwd(), "content", "packs", productSlug);
+    const packPath = join(process.cwd(), "content", "packs", finalSlug);
 
     if (!existsSync(packPath)) {
       return NextResponse.json(
@@ -83,7 +84,7 @@ export async function GET(request: NextRequest) {
     const zipBuffer = zip.toBuffer();
 
     // Return the zip file with product-specific filename
-    const filename = `${productSlug}-devspec.zip`;
+    const filename = `${finalSlug}-devspec.zip`;
     
     return new NextResponse(new Uint8Array(zipBuffer), {
       status: 200,
