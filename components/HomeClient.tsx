@@ -310,7 +310,40 @@ export default function HomeClient() {
         </section>
       )}
 
-      {/* CTA */}
+      {/* DevSpec Pass CTA */}
+      <FadeIn>
+        <section className="container mx-auto px-4 py-24">
+          <div className="bg-gradient-to-br from-brand-gray to-brand-black rounded border border-brand-purple p-16 text-center max-w-3xl mx-auto">
+            <div className="inline-block px-3 py-1 border border-brand-purple text-brand-purple text-xs rounded-full mb-6">
+              LIMITED TO FIRST 25 BUYERS
+            </div>
+            <h2 className="text-3xl font-medium mb-4">Get the DevSpec Pass</h2>
+            <p className="text-gray-400 mb-6 max-w-xl mx-auto text-sm leading-relaxed">
+              Unlock all premium DevSpecs for 90 days. Early-bird pricing: $197
+              for the first 25 buyers.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center mb-4">
+              <Link
+                href="/pass"
+                className="bg-white text-black hover:bg-gray-200 px-8 py-3 rounded text-sm font-medium transition-colors"
+              >
+                Get Early Bird Access
+              </Link>
+              <Link
+                href="/catalog"
+                className="border border-brand-border hover:border-gray-600 px-8 py-3 rounded text-sm font-medium transition-colors"
+              >
+                Browse Individual DevSpecs
+              </Link>
+            </div>
+            <p className="text-xs text-gray-700">
+              Regular price: $97/month after early-bird sold out
+            </p>
+          </div>
+        </section>
+      </FadeIn>
+
+      {/* Browse CTA */}
       <FadeIn>
         <section className="container mx-auto px-4 py-24 mb-32">
           <div className="bg-brand-gray rounded border border-brand-border p-16 text-center max-w-3xl mx-auto">

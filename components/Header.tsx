@@ -27,6 +27,12 @@ export default function Header() {
               DevSpecs
             </Link>
             <Link
+              href="/pass"
+              className="text-gray-400 hover:text-white transition-colors text-sm"
+            >
+              Pass
+            </Link>
+            <Link
               href="/repositories"
               className="text-gray-400 hover:text-white transition-colors text-sm"
             >

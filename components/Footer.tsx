@@ -53,6 +53,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/pass" className="text-gray-500 hover:text-white transition-colors">
+                  DevSpec Pass
+                </Link>
+              </li>
+              <li>
                 <Link href="/repositories" className="text-gray-500 hover:text-white transition-colors">
                   Repositories
                 </Link>
