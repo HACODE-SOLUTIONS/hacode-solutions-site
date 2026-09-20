@@ -8,6 +8,32 @@ interface SEOProps {
   noIndex?: boolean;
 }
 
+/**
+ * Returns the canonical production site URL for SEO purposes.
+ * Always returns https://hacode.solutions unless NEXT_PUBLIC_SITE_URL
+ * is explicitly set to the apex domain (for local dev overrides).
+ * Rejects vercel.app URLs and other non-apex domains to prevent
+ * misconfiguration in production.
+ */
+export function getSiteUrl(): string {
+  const APEX_URL = "https://hacode.solutions";
+  const envUrl = process.env.NEXT_PUBLIC_SITE_URL;
+
+  if (!envUrl) {
+    return APEX_URL;
+  }
+
+  if (envUrl.includes("vercel.app")) {
+    return APEX_URL;
+  }
+
+  if (envUrl.includes("hacode.solutions")) {
+    return envUrl;
+  }
+
+  return APEX_URL;
+}
+
 export function generateSEO({
   title,
   description,
@@ -15,7 +41,7 @@ export function generateSEO({
   ogImage = "/og-default.png",
   noIndex = false,
 }: SEOProps): Metadata {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://hacode.solutions";
+  const siteUrl = getSiteUrl();
   const url = `${siteUrl}${path}`;
 
   return {
@@ -73,7 +99,7 @@ export function generateProductJsonLd(product: {
   price?: number;
   url: string;
 }) {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://hacode.solutions";
+  const siteUrl = getSiteUrl();
   
   return {
     "@context": "https://schema.org",
@@ -97,7 +123,7 @@ export function generateProductJsonLd(product: {
 }
 
 export function generateOrganizationJsonLd() {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://hacode.solutions";
+  const siteUrl = getSiteUrl();
   
   return {
     "@context": "https://schema.org",
