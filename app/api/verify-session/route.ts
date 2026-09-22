@@ -50,6 +50,8 @@ export async function GET(request: NextRequest) {
       productName: productName,
       isDownloadable: isDownloadable,
       paymentStatus: session.payment_status,
+      amountTotal: session.amount_total,
+      currency: session.currency,
     });
   } catch (error) {
     const errorMessage =

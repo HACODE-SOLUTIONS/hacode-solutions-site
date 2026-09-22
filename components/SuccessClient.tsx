@@ -34,6 +34,7 @@ export default function SuccessClient() {
   const [productName, setProductName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const [priceId, setPriceId] = useState<string | null>(null);
 
   useEffect(() => {
     if (sessionId) {
@@ -52,6 +53,29 @@ export default function SuccessClient() {
       if (response.ok && data.valid) {
         setVerified(true);
         setProductName(data.productName);
+        
+        const purchaseKey = `ga4_purchase_${sessionId}`;
+        const alreadyTracked = sessionStorage.getItem(purchaseKey);
+        
+        if (!alreadyTracked && typeof window.gtag === "function") {
+          const value = data.amountTotal ? data.amountTotal / 100 : 0;
+          const currency = (data.currency || "usd").toUpperCase();
+          
+          window.gtag("event", "purchase", {
+            transaction_id: sessionId,
+            value: value,
+            currency: currency,
+            items: [
+              {
+                item_name: data.productName,
+                price: value,
+                quantity: 1,
+              },
+            ],
+          });
+          
+          sessionStorage.setItem(purchaseKey, "true");
+        }
       } else {
         setError(data.error || "Unable to verify your purchase");
       }

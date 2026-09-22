@@ -77,6 +77,7 @@ export default function PassClient({ earlyBirdPriceId }: PassClientProps) {
                 <CheckoutButton
                   priceId={earlyBirdPriceId!}
                   productName="DevSpec Pass - Early Bird (90 days)"
+                  price={197}
                 />
                 <p className="text-xs text-gray-600">
                   Secure checkout powered by Stripe
@@ -391,6 +392,7 @@ export default function PassClient({ earlyBirdPriceId }: PassClientProps) {
                 <CheckoutButton
                   priceId={earlyBirdPriceId!}
                   productName="DevSpec Pass - Early Bird (90 days)"
+                  price={197}
                 />
                 <Link
                   href="/catalog"
