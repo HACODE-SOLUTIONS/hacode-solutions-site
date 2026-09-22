@@ -22,6 +22,10 @@ function getProductSlug(productName: string): string | null {
     return "freelancer-client-onboarding-kit";
   }
   
+  if (normalizedName.includes("sales call") || normalizedName.includes("scope brief")) {
+    return "sales-call-scope-brief-kit";
+  }
+  
   return null;
 }
 
