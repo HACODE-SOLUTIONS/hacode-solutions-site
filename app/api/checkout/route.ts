@@ -49,7 +49,10 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ sessionId: session.id });
+    return NextResponse.json({ 
+      sessionId: session.id,
+      url: session.url 
+    });
   } catch (error) {
     // Return safe error message (no secrets)
     const errorMessage =
