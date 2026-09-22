@@ -5,6 +5,7 @@ import CheckoutButton from "@/components/CheckoutButton";
 import { generateSEO, generateProductJsonLd } from "@/lib/seo";
 import { FadeIn, Reveal } from "@/components/Reveal";
 import ProofStrip from "@/components/ProofStrip";
+import ClientOnboardingProof from "@/components/ClientOnboardingProof";
 
 export async function generateStaticParams() {
   return devSpecs.map((spec) => ({
@@ -208,6 +209,7 @@ export default function DevSpecPage({ params }: { params: { slug: string } }) {
             </FadeIn>
 
             {spec.slug === "mvp-auth-stripe-billing" && <ProofStrip />}
+            {spec.slug === "freelancer-client-onboarding-kit" && <ClientOnboardingProof />}
 
             <Reveal stagger={0.1}>
               <div className="grid md:grid-cols-2 gap-4">
