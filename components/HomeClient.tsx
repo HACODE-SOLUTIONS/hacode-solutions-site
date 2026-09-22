@@ -265,52 +265,87 @@ export default function HomeClient() {
         </div>
       </section>
 
-      {/* Product #1 - MVP Auth + Stripe Billing - Featured Hero */}
+      {/* Featured Products */}
       <section className="container mx-auto px-4 py-24">
-        <FadeIn>
-          <div className="bg-gradient-to-br from-brand-gray to-brand-black rounded border border-brand-border p-12 max-w-4xl mx-auto">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="px-3 py-1 bg-brand-purple/10 border border-brand-purple text-brand-purple text-xs rounded-full">
-                MOST POPULAR
-              </span>
-              <span className="text-gray-600 text-xs">Ship auth + billing in one day</span>
-            </div>
-            <h2 className="text-3xl font-medium mb-4">
-              MVP Auth + Stripe Billing DevSpec Pack
-            </h2>
-            <p className="text-gray-400 mb-6 text-sm leading-relaxed max-w-2xl">
-              Hand Cursor or Claude Code a production Auth + Stripe Billing DevSpec and ship 
-              a working paid signup path in one focused day—without inventing webhooks or 
-              entitlements from scratch.
-            </p>
-            <div className="flex flex-wrap gap-2 mb-6">
-              <span className="px-2.5 py-1 bg-brand-black rounded border border-brand-border text-xs text-gray-500">
-                Next.js App Router
-              </span>
-              <span className="px-2.5 py-1 bg-brand-black rounded border border-brand-border text-xs text-gray-500">
-                Auth.js v5
-              </span>
-              <span className="px-2.5 py-1 bg-brand-black rounded border border-brand-border text-xs text-gray-500">
-                Stripe
-              </span>
-              <span className="px-2.5 py-1 bg-brand-black rounded border border-brand-border text-xs text-gray-500">
-                Prisma
-              </span>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3 items-start">
-              <Link
-                href="/devspec/mvp-auth-stripe-billing"
-                className="bg-white text-black hover:bg-gray-200 px-6 py-3 rounded text-sm font-medium transition-colors inline-block"
-              >
-                View Details & Get Started
-              </Link>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-medium">$49</span>
-                <span className="text-xs text-gray-600">one-time</span>
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* Product #1 - MVP Auth + Stripe Billing - Featured Hero */}
+          <FadeIn>
+            <div className="bg-gradient-to-br from-brand-gray to-brand-black rounded border border-brand-border p-12">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="px-3 py-1 bg-brand-purple/10 border border-brand-purple text-brand-purple text-xs rounded-full">
+                  MOST POPULAR
+                </span>
+                <span className="text-gray-600 text-xs">Ship auth + billing in one day</span>
+              </div>
+              <h2 className="text-3xl font-medium mb-4">
+                MVP Auth + Stripe Billing DevSpec Pack
+              </h2>
+              <p className="text-gray-400 mb-6 text-sm leading-relaxed max-w-2xl">
+                Hand Cursor or Claude Code a production Auth + Stripe Billing DevSpec and ship 
+                a working paid signup path in one focused day—without inventing webhooks or 
+                entitlements from scratch.
+              </p>
+              <div className="flex flex-wrap gap-2 mb-6">
+                <span className="px-2.5 py-1 bg-brand-black rounded border border-brand-border text-xs text-gray-500">
+                  Next.js App Router
+                </span>
+                <span className="px-2.5 py-1 bg-brand-black rounded border border-brand-border text-xs text-gray-500">
+                  Auth.js v5
+                </span>
+                <span className="px-2.5 py-1 bg-brand-black rounded border border-brand-border text-xs text-gray-500">
+                  Stripe
+                </span>
+                <span className="px-2.5 py-1 bg-brand-black rounded border border-brand-border text-xs text-gray-500">
+                  Prisma
+                </span>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3 items-start">
+                <Link
+                  href="/devspec/mvp-auth-stripe-billing"
+                  className="bg-white text-black hover:bg-gray-200 px-6 py-3 rounded text-sm font-medium transition-colors inline-block"
+                >
+                  View Details & Get Started
+                </Link>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-medium">$49</span>
+                  <span className="text-xs text-gray-600">one-time</span>
+                </div>
               </div>
             </div>
-          </div>
-        </FadeIn>
+          </FadeIn>
+
+          {/* Product #2 - Freelancer Client Onboarding Kit */}
+          <FadeIn delay={0.2}>
+            <div className="bg-brand-gray rounded border border-brand-border p-8">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="px-3 py-1 bg-brand-black/50 border border-brand-border text-gray-400 text-xs rounded-full">
+                  NEW
+                </span>
+                <span className="text-gray-600 text-xs">Client ops for freelancers</span>
+              </div>
+              <h3 className="text-2xl font-medium mb-3">
+                Freelancer Client Onboarding Kit
+              </h3>
+              <p className="text-gray-400 mb-4 text-sm leading-relaxed max-w-2xl">
+                Run first-week onboarding in under 90 minutes—intake → brief → scope lock → 
+                kickoff—with a Cursor/Claude skill that drafts the project brief from messy notes. 
+                Hands off Auth+Stripe builds to the $49 DevSpec.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 items-start">
+                <Link
+                  href="/devspec/freelancer-client-onboarding-kit"
+                  className="bg-white text-black hover:bg-gray-200 px-5 py-2.5 rounded text-sm font-medium transition-colors inline-block"
+                >
+                  View Details
+                </Link>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-xl font-medium">$39</span>
+                  <span className="text-xs text-gray-600">one-time</span>
+                </div>
+              </div>
+            </div>
+          </FadeIn>
+        </div>
       </section>
 
       {/* Featured Free DevSpecs */}
