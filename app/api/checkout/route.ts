@@ -32,6 +32,11 @@ export async function POST(request: NextRequest) {
       process.env.NEXT_PUBLIC_SITE_URL ||
       "https://hacode-solutions-site.vercel.app";
 
+    // Build cancel_url: return to product page if slug provided, otherwise catalog
+    const cancelUrl = productSlug 
+      ? `${baseUrl}/devspec/${productSlug}`
+      : `${baseUrl}/catalog`;
+
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
@@ -42,7 +47,7 @@ export async function POST(request: NextRequest) {
         },
       ],
       success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/catalog`,
+      cancel_url: cancelUrl,
       metadata: {
         productName,
         productSlug: productSlug || "",
