@@ -11,12 +11,14 @@ interface CheckoutButtonProps {
   priceId: string;
   productName: string;
   productSlug?: string;
+  price?: number;
 }
 
 export default function CheckoutButton({
   priceId,
   productName,
   productSlug,
+  price,
 }: CheckoutButtonProps) {
   const [loading, setLoading] = useState(false);
 
@@ -46,6 +48,22 @@ export default function CheckoutButton({
       }
 
       const { sessionId, url } = data;
+
+      // Fire GA4 begin_checkout event after successful session creation
+      if (typeof window.gtag === "function") {
+        window.gtag("event", "begin_checkout", {
+          currency: "USD",
+          value: price || 0,
+          items: [
+            {
+              item_id: priceId,
+              item_name: productName,
+              price: price || 0,
+              quantity: 1,
+            },
+          ],
+        });
+      }
 
       // Prefer direct URL redirect (most reliable across all browsers/webviews)
       if (url) {

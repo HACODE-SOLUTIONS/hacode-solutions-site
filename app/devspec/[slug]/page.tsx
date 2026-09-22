@@ -402,6 +402,7 @@ export default function DevSpecPage({ params }: { params: { slug: string } }) {
                     priceId={spec.stripePriceId}
                     productName={spec.name}
                     productSlug={spec.slug}
+                    price={spec.price}
                   />
                   <div className="mt-3 text-xs text-gray-600 text-center">
                     Secure checkout via Stripe
