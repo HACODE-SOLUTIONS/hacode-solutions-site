@@ -22,7 +22,7 @@ export default function CatalogPage() {
       </FadeIn>
 
       <FadeIn delay={0.2}>
-        <div className="bg-brand-gray rounded border border-brand-purple p-6 mb-12 max-w-3xl">
+        <div className="bg-brand-gray rounded border border-brand-purple p-6 mb-6 max-w-3xl">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
@@ -42,6 +42,33 @@ export default function CatalogPage() {
                   View Details
                 </Link>
                 <span className="text-sm font-medium">$49</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </FadeIn>
+
+      <FadeIn delay={0.3}>
+        <div className="bg-brand-gray rounded border border-brand-border p-6 mb-12 max-w-3xl">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="px-2.5 py-1 bg-brand-black/50 border border-brand-border text-gray-400 text-xs rounded-full">
+                  NEW
+                </span>
+              </div>
+              <h3 className="font-medium mb-1 text-sm">Freelancer Client Onboarding Kit</h3>
+              <p className="text-gray-500 text-xs leading-relaxed mb-3">
+                Run first-week onboarding in under 90 minutes—intake → brief → scope lock → kickoff. Cursor/Claude skill included.
+              </p>
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/devspec/freelancer-client-onboarding-kit"
+                  className="bg-white text-black hover:bg-gray-200 px-4 py-2 rounded text-xs font-medium transition-colors inline-block"
+                >
+                  View Details
+                </Link>
+                <span className="text-sm font-medium">$39</span>
               </div>
             </div>
           </div>

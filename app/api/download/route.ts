@@ -18,6 +18,10 @@ function getProductSlug(productName: string): string | null {
     return "mvp-auth-stripe-billing";
   }
   
+  if (normalizedName.includes("freelancer client onboarding") || normalizedName.includes("first-week client os")) {
+    return "freelancer-client-onboarding-kit";
+  }
+  
   return null;
 }
 
