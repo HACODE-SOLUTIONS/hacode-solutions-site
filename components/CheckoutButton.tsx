@@ -36,16 +36,45 @@ export default function CheckoutButton({
         }),
       });
 
-      const { sessionId } = await response.json();
+      const data = await response.json();
+
+      if (!response.ok) {
+        const errorMessage = data.error || "Failed to create checkout session. Please try again.";
+        alert(errorMessage);
+        setLoading(false);
+        return;
+      }
+
+      const { sessionId, url } = data;
+
+      // Prefer direct URL redirect (most reliable across all browsers/webviews)
+      if (url) {
+        window.location.assign(url);
+        return;
+      }
+
+      // Fallback to Stripe.js redirectToCheckout if URL not available
+      if (!sessionId) {
+        alert("Checkout session ID missing. Please contact support.");
+        setLoading(false);
+        return;
+      }
 
       const stripe = await stripePromise;
-      if (stripe) {
-        await stripe.redirectToCheckout({ sessionId });
+      if (!stripe) {
+        alert("Stripe configuration error. Please contact support.");
+        setLoading(false);
+        return;
+      }
+
+      const { error } = await stripe.redirectToCheckout({ sessionId });
+      if (error) {
+        alert(error.message || "Failed to redirect to checkout. Please try again.");
+        setLoading(false);
       }
     } catch (error) {
       console.error("Error:", error);
       alert("Something went wrong. Please try again.");
-    } finally {
       setLoading(false);
     }
   };
