@@ -13,8 +13,6 @@ function isDownloadableProduct(productName: string): boolean {
   
   // List of downloadable products
   return (
-    normalizedName.includes("inbox os") ||
-    normalizedName.includes("grokbot") ||
     normalizedName.includes("saas launch kit") ||
     normalizedName.includes("mvp auth") ||
     normalizedName.includes("ship the money path")

@@ -9,10 +9,6 @@ import { FadeIn } from "@/components/Reveal";
 function getDownloadFilename(productName: string): string {
   const normalizedName = productName.toLowerCase();
   
-  if (normalizedName.includes("inbox os") || normalizedName.includes("grokbot")) {
-    return "inbox-os.zip";
-  }
-  
   if (normalizedName.includes("saas launch kit")) {
     return "saas-launch-kit-devspec.zip";
   }

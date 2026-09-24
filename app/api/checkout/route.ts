@@ -47,10 +47,7 @@ export async function POST(request: NextRequest) {
     // Build cancel_url: return to product page if slug provided, otherwise catalog
     let cancelUrl = `${baseUrl}/catalog`;
     if (productSlug) {
-      // inbox-os is at root, others are under /devspec
-      cancelUrl = productSlug === "inbox-os" 
-        ? `${baseUrl}/inbox-os`
-        : `${baseUrl}/devspec/${productSlug}`;
+      cancelUrl = `${baseUrl}/devspec/${productSlug}`;
     }
 
     const session = await stripe.checkout.sessions.create({

@@ -10,10 +10,6 @@ export const dynamic = "force-dynamic";
 function getProductSlug(productName: string): string | null {
   const normalizedName = productName.toLowerCase();
   
-  if (normalizedName.includes("inbox os") || normalizedName.includes("grokbot")) {
-    return "inbox-os";
-  }
-  
   if (normalizedName.includes("saas launch kit")) {
     return "saas-launch-kit";
   }

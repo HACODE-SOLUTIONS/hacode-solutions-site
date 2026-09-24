@@ -266,56 +266,6 @@ export default function HomeClient() {
         </div>
       </section>
 
-      {/* Featured Product - Inbox OS */}
-      <section className="container mx-auto px-4 py-24">
-        <div className="max-w-4xl mx-auto">
-          <FadeIn>
-            <div className="bg-gradient-to-br from-brand-gray to-brand-black rounded border border-brand-purple p-12">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="px-3 py-1 bg-brand-purple/10 border border-brand-purple text-brand-purple text-xs rounded-full">
-                  NEW
-                </span>
-                <span className="text-gray-600 text-xs">Grok Bot ready</span>
-              </div>
-              <h2 className="text-3xl font-medium mb-4">
-                Inbox OS
-              </h2>
-              <p className="text-gray-400 mb-6 text-sm leading-relaxed max-w-2xl">
-                Configure a Grok Bot agent that becomes your small-business inbox brain — WhatsApp,
-                Instagram DMs, and other chats in one place — so you catch orders and manage
-                conversations without tab-hopping.
-              </p>
-              <div className="flex flex-wrap gap-2 mb-6">
-                <span className="px-2.5 py-1 bg-brand-black rounded border border-brand-border text-xs text-gray-500">
-                  Grok Bot
-                </span>
-                <span className="px-2.5 py-1 bg-brand-black rounded border border-brand-border text-xs text-gray-500">
-                  Cursor
-                </span>
-                <span className="px-2.5 py-1 bg-brand-black rounded border border-brand-border text-xs text-gray-500">
-                  ChatGPT Projects
-                </span>
-                <span className="px-2.5 py-1 bg-brand-black rounded border border-brand-border text-xs text-gray-500">
-                  AI Agents
-                </span>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-3 items-start">
-                <Link
-                  href="/inbox-os"
-                  className="bg-white text-black hover:bg-gray-200 px-6 py-3 rounded text-sm font-medium transition-colors inline-block"
-                >
-                  View Details & Get Started
-                </Link>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-medium">$79</span>
-                  <span className="text-xs text-gray-600">one-time</span>
-                </div>
-              </div>
-            </div>
-          </FadeIn>
-        </div>
-      </section>
-
       {/* Featured Free DevSpecs */}
       <section className="container mx-auto px-4 py-24">
         <FadeIn>
