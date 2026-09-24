@@ -2,6 +2,8 @@ import { generateSEO, generateProductJsonLd } from "@/lib/seo";
 import { FadeIn, Reveal } from "@/components/Reveal";
 import CheckoutButton from "@/components/CheckoutButton";
 import Link from "next/link";
+import { getDevSpecBySlug } from "@/data/devspecs";
+import { notFound } from "next/navigation";
 
 export const metadata = generateSEO({
   title: "Inbox OS - Grok Bot Ready",
@@ -11,6 +13,12 @@ export const metadata = generateSEO({
 });
 
 export default function InboxOSPage() {
+  const product = getDevSpecBySlug("inbox-os");
+
+  if (!product || product.sunset) {
+    notFound();
+  }
+
   const productJsonLd = generateProductJsonLd({
     name: "Inbox OS",
     description:
