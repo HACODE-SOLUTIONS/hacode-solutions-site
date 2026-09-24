@@ -6,8 +6,9 @@ import { devSpecs } from "@/data/devspecs";
 import { Reveal, FadeIn } from "@/components/Reveal";
 
 export default function HomeClient() {
-  const freeSpecs = devSpecs.filter((s) => !s.isPaid);
-  const paidSpecs = devSpecs.filter((s) => s.isPaid);
+  const activeSpecs = devSpecs.filter((s) => !s.sunset);
+  const freeSpecs = activeSpecs.filter((s) => !s.isPaid);
+  const paidSpecs = activeSpecs.filter((s) => s.isPaid);
   const featuredFreeSpecs = freeSpecs.filter((s) => s.popular).slice(0, 5);
   const featuredPaidSpecs = paidSpecs.filter((s) => s.popular);
 
@@ -265,89 +266,6 @@ export default function HomeClient() {
         </div>
       </section>
 
-      {/* Featured Products */}
-      <section className="container mx-auto px-4 py-24">
-        <div className="max-w-4xl mx-auto space-y-6">
-          {/* Product #1 - MVP Auth + Stripe Billing - Featured Hero */}
-          <FadeIn>
-            <div className="bg-gradient-to-br from-brand-gray to-brand-black rounded border border-brand-border p-12">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="px-3 py-1 bg-brand-purple/10 border border-brand-purple text-brand-purple text-xs rounded-full">
-                  MOST POPULAR
-                </span>
-                <span className="text-gray-600 text-xs">Ship auth + billing in one day</span>
-              </div>
-              <h2 className="text-3xl font-medium mb-4">
-                MVP Auth + Stripe Billing DevSpec Pack
-              </h2>
-              <p className="text-gray-400 mb-6 text-sm leading-relaxed max-w-2xl">
-                Hand Cursor or Claude Code a production Auth + Stripe Billing DevSpec and ship 
-                a working paid signup path in one focused day—without inventing webhooks or 
-                entitlements from scratch.
-              </p>
-              <div className="flex flex-wrap gap-2 mb-6">
-                <span className="px-2.5 py-1 bg-brand-black rounded border border-brand-border text-xs text-gray-500">
-                  Next.js App Router
-                </span>
-                <span className="px-2.5 py-1 bg-brand-black rounded border border-brand-border text-xs text-gray-500">
-                  Auth.js v5
-                </span>
-                <span className="px-2.5 py-1 bg-brand-black rounded border border-brand-border text-xs text-gray-500">
-                  Stripe
-                </span>
-                <span className="px-2.5 py-1 bg-brand-black rounded border border-brand-border text-xs text-gray-500">
-                  Prisma
-                </span>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-3 items-start">
-                <Link
-                  href="/devspec/mvp-auth-stripe-billing"
-                  className="bg-white text-black hover:bg-gray-200 px-6 py-3 rounded text-sm font-medium transition-colors inline-block"
-                >
-                  View Details & Get Started
-                </Link>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-medium">$49</span>
-                  <span className="text-xs text-gray-600">one-time</span>
-                </div>
-              </div>
-            </div>
-          </FadeIn>
-
-          {/* Product #2 - Freelancer Client Onboarding Kit */}
-          <FadeIn delay={0.2}>
-            <div className="bg-brand-gray rounded border border-brand-border p-8">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="px-3 py-1 bg-brand-black/50 border border-brand-border text-gray-400 text-xs rounded-full">
-                  NEW
-                </span>
-                <span className="text-gray-600 text-xs">Client ops for freelancers</span>
-              </div>
-              <h3 className="text-2xl font-medium mb-3">
-                Freelancer Client Onboarding Kit
-              </h3>
-              <p className="text-gray-400 mb-4 text-sm leading-relaxed max-w-2xl">
-                Run first-week onboarding in under 90 minutes—intake → brief → scope lock → 
-                kickoff—with a Cursor/Claude skill that drafts the project brief from messy notes. 
-                Hands off Auth+Stripe builds to the $49 DevSpec.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 items-start">
-                <Link
-                  href="/devspec/freelancer-client-onboarding-kit"
-                  className="bg-white text-black hover:bg-gray-200 px-5 py-2.5 rounded text-sm font-medium transition-colors inline-block"
-                >
-                  View Details
-                </Link>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-xl font-medium">$39</span>
-                  <span className="text-xs text-gray-600">one-time</span>
-                </div>
-              </div>
-            </div>
-          </FadeIn>
-        </div>
-      </section>
-
       {/* Featured Free DevSpecs */}
       <section className="container mx-auto px-4 py-24">
         <FadeIn>
@@ -364,67 +282,6 @@ export default function HomeClient() {
           </div>
         </Reveal>
       </section>
-
-      {/* Featured Paid Product - Hero Upsell */}
-      {featuredPaidSpecs.length > 0 && (
-        <section className="container mx-auto px-4 py-24">
-          <FadeIn>
-            <div className="text-center mb-16">
-              <div className="inline-block px-3 py-1 border border-brand-purple text-brand-purple text-xs rounded-full mb-4">
-                PREMIUM
-              </div>
-              <h2 className="text-3xl font-medium mb-4">
-                Ready to wire it all together?
-              </h2>
-              <p className="text-gray-400 max-w-2xl mx-auto text-sm leading-relaxed">
-                The SaaS Launch Kit integrates Auth.js, Stripe, and Next.js App
-                Router into one complete production path. Goes beyond individual
-                starters to provide the full integration architecture.
-              </p>
-            </div>
-          </FadeIn>
-          <Reveal>
-            <div className="max-w-3xl mx-auto">
-              {featuredPaidSpecs.map((spec) => (
-                <DevSpecCard key={spec.id} spec={spec} />
-              ))}
-            </div>
-          </Reveal>
-        </section>
-      )}
-
-      {/* DevSpec Pass CTA */}
-      <FadeIn>
-        <section className="container mx-auto px-4 py-24">
-          <div className="bg-gradient-to-br from-brand-gray to-brand-black rounded border border-brand-purple p-16 text-center max-w-3xl mx-auto">
-            <div className="inline-block px-3 py-1 border border-brand-purple text-brand-purple text-xs rounded-full mb-6">
-              LIMITED TO FIRST 25 BUYERS
-            </div>
-            <h2 className="text-3xl font-medium mb-4">Get the DevSpec Pass</h2>
-            <p className="text-gray-400 mb-6 max-w-xl mx-auto text-sm leading-relaxed">
-              Unlock all premium DevSpecs for 90 days. Early-bird pricing: $197
-              for the first 25 buyers.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center mb-4">
-              <Link
-                href="/pass"
-                className="bg-white text-black hover:bg-gray-200 px-8 py-3 rounded text-sm font-medium transition-colors"
-              >
-                Get Early Bird Access
-              </Link>
-              <Link
-                href="/catalog"
-                className="border border-brand-border hover:border-gray-600 px-8 py-3 rounded text-sm font-medium transition-colors"
-              >
-                Browse Individual DevSpecs
-              </Link>
-            </div>
-            <p className="text-xs text-gray-700">
-              Regular price: $97/month after early-bird sold out
-            </p>
-          </div>
-        </section>
-      </FadeIn>
 
       {/* Browse CTA */}
       <FadeIn>

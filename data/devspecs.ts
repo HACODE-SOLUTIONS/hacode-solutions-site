@@ -168,6 +168,7 @@ export const devSpecs: DevSpec[] = [
     fileCount: 45,
     category: "SaaS Framework",
     popular: true,
+    sunset: true,
   },
 
   // PAID Mid-Catalog DevSpecs
@@ -205,6 +206,7 @@ export const devSpecs: DevSpec[] = [
     fileCount: 17,
     category: "Payments",
     popular: true,
+    sunset: true,
   },
   {
     id: "8",
@@ -238,6 +240,7 @@ export const devSpecs: DevSpec[] = [
     fileCount: 16,
     category: "Operating Kits",
     popular: true,
+    sunset: true,
   },
   {
     id: "9",
@@ -272,6 +275,7 @@ export const devSpecs: DevSpec[] = [
     fileCount: 16,
     category: "Operations",
     popular: true,
+    sunset: true,
   },
 ];
 
@@ -279,10 +283,14 @@ export function getDevSpecBySlug(slug: string): DevSpec | undefined {
   return devSpecs.find((spec) => spec.slug === slug);
 }
 
+export function getActiveDevSpecs(): DevSpec[] {
+  return devSpecs.filter((spec) => !spec.sunset);
+}
+
 export function getFreeDevSpecs(): DevSpec[] {
-  return devSpecs.filter((spec) => !spec.isPaid);
+  return devSpecs.filter((spec) => !spec.isPaid && !spec.sunset);
 }
 
 export function getPaidDevSpecs(): DevSpec[] {
-  return devSpecs.filter((spec) => spec.isPaid);
+  return devSpecs.filter((spec) => spec.isPaid && !spec.sunset);
 }

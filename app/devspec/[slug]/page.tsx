@@ -8,7 +8,7 @@ import ProofStrip from "@/components/ProofStrip";
 import ClientOnboardingProof from "@/components/ClientOnboardingProof";
 
 export async function generateStaticParams() {
-  return devSpecs.map((spec) => ({
+  return devSpecs.filter(spec => !spec.sunset).map((spec) => ({
     slug: spec.slug,
   }));
 }
@@ -35,7 +35,7 @@ export async function generateMetadata({
 export default function DevSpecPage({ params }: { params: { slug: string } }) {
   const spec = devSpecs.find((s) => s.slug === params.slug);
 
-  if (!spec) {
+  if (!spec || spec.sunset) {
     notFound();
   }
 
