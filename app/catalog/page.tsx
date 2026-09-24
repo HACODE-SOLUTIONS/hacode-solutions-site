@@ -21,33 +21,6 @@ export default function CatalogPage() {
         </p>
       </FadeIn>
 
-      <FadeIn delay={0.2}>
-        <div className="bg-brand-gray rounded border border-brand-purple p-6 mb-12 max-w-3xl">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="px-2.5 py-1 bg-brand-purple/10 border border-brand-purple text-brand-purple text-xs rounded-full">
-                  NEW
-                </span>
-              </div>
-              <h3 className="font-medium mb-1 text-sm">Inbox OS</h3>
-              <p className="text-gray-500 text-xs leading-relaxed mb-3">
-                Grok Bot ready — Configure a small-business inbox brain for WhatsApp, Instagram DMs, and multi-chat orders without tab-hopping.
-              </p>
-              <div className="flex items-center gap-3">
-                <Link
-                  href="/inbox-os"
-                  className="bg-white text-black hover:bg-gray-200 px-4 py-2 rounded text-xs font-medium transition-colors inline-block"
-                >
-                  View Details
-                </Link>
-                <span className="text-sm font-medium">$79</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </FadeIn>
-
       <CatalogClient />
     </div>
   );

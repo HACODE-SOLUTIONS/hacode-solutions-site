@@ -8,7 +8,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const staticPages = [
     "",
     "/catalog",
-    "/inbox-os",
     "/repositories",
     "/how-it-works",
     "/about",
@@ -19,14 +18,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     url: `${siteUrl}${path}`,
     lastModified: new Date(),
     changeFrequency: "monthly" as const,
-    priority: path === "" ? 1 : path === "/inbox-os" ? 0.95 : 0.8,
+    priority: path === "" ? 1 : 0.8,
   }));
 
   // Filter out sunset products from devspec pages
   const activeDevSpecs = devSpecs.filter((spec) => !spec.sunset);
-  const devSpecPages = activeDevSpecs
-    .filter((spec) => spec.slug !== "inbox-os")
-    .map((spec) => ({
+  const devSpecPages = activeDevSpecs.map((spec) => ({
       url: `${siteUrl}/devspec/${spec.slug}`,
       lastModified: new Date(),
       changeFrequency: "monthly" as const,
