@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
+import { getDevSpecBySlug } from "@/data/devspecs";
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,6 +21,17 @@ export async function POST(request: NextRequest) {
         { error: "Price ID is required" },
         { status: 400 }
       );
+    }
+
+    // Check if product is sunset or unavailable
+    if (productSlug) {
+      const spec = getDevSpecBySlug(productSlug);
+      if (!spec || spec.sunset) {
+        return NextResponse.json(
+          { error: "This product is no longer available for purchase." },
+          { status: 404 }
+        );
+      }
     }
 
     // Initialize Stripe with validated key

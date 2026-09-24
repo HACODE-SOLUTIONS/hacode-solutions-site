@@ -8,12 +8,14 @@ import { Reveal } from "@/components/Reveal";
 export default function CatalogClient() {
   const [filter, setFilter] = useState<"all" | "free" | "paid">("all");
 
+  const activeSpecs = devSpecs.filter((s) => !s.sunset);
+
   const filteredSpecs =
     filter === "all"
-      ? devSpecs
+      ? activeSpecs
       : filter === "free"
-      ? devSpecs.filter((s) => !s.isPaid)
-      : devSpecs.filter((s) => s.isPaid);
+      ? activeSpecs.filter((s) => !s.isPaid)
+      : activeSpecs.filter((s) => s.isPaid);
 
   return (
     <>

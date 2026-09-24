@@ -15,6 +15,7 @@ export interface DevSpec {
   fileCount: number;
   category: string;
   popular?: boolean;
+  sunset?: boolean;
 }
 
 export interface Repository {
