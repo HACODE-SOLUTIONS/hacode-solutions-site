@@ -167,7 +167,6 @@ export const devSpecs: DevSpec[] = [
     isPaid: true,
     price: 199,
     stripePriceId: process.env.STRIPE_PRICE_ID_SAAS_LAUNCH_KIT || "",
-    sunset: true,
     features: [
       "Complete Auth.js OAuth integration (GitHub, Google, Discord)",
       "Stripe Checkout + subscription billing with webhooks",
@@ -201,7 +200,6 @@ export const devSpecs: DevSpec[] = [
     fileCount: 45,
     category: "SaaS Framework",
     popular: true,
-    sunset: true,
   },
 
   {
@@ -239,7 +237,6 @@ export const devSpecs: DevSpec[] = [
     fileCount: 17,
     category: "Payments",
     popular: true,
-    sunset: true,
   },
   {
     id: "8",
@@ -274,7 +271,6 @@ export const devSpecs: DevSpec[] = [
     fileCount: 16,
     category: "Operating Kits",
     popular: true,
-    sunset: true,
   },
   {
     id: "9",
@@ -310,7 +306,6 @@ export const devSpecs: DevSpec[] = [
     fileCount: 16,
     category: "Operations",
     popular: true,
-    sunset: true,
   },
 ];
 
