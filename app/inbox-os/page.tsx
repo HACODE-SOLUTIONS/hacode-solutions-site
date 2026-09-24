@@ -293,7 +293,7 @@ export default function InboxOSPage() {
             <div className="bg-brand-gray rounded border border-brand-border p-6 sticky top-24">
               <div className="mb-6">
                 <div className="text-xs text-gray-600 mb-1">Package</div>
-                <div className="text-xl font-medium mb-1">11 files</div>
+                <div className="text-xl font-medium mb-1">12 files</div>
                 <div className="text-xs text-gray-600">
                   Context + skills + prompts
                 </div>
@@ -312,10 +312,10 @@ export default function InboxOSPage() {
               </div>
 
               <CheckoutButton
-                priceId={process.env.STRIPE_PRICE_ID_INBOX_OS || ""}
-                productName="Inbox OS"
-                productSlug="inbox-os"
-                price={79}
+                priceId={product.stripePriceId || ""}
+                productName={product.name}
+                productSlug={product.slug}
+                price={product.price || 79}
               />
 
               <div className="mt-3 text-xs text-gray-600 text-center">
