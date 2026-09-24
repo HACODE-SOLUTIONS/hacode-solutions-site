@@ -9,6 +9,10 @@ import { FadeIn } from "@/components/Reveal";
 function getDownloadFilename(productName: string): string {
   const normalizedName = productName.toLowerCase();
   
+  if (normalizedName.includes("inbox os") || normalizedName.includes("grokbot")) {
+    return "inbox-os.zip";
+  }
+  
   if (normalizedName.includes("saas launch kit")) {
     return "saas-launch-kit-devspec.zip";
   }
@@ -174,11 +178,10 @@ export default function SuccessClient() {
               <p className="text-sm text-gray-600 mb-8">{productName}</p>
 
               <div className="bg-brand-black rounded border border-brand-border p-6 mb-8">
-                <h2 className="text-lg font-medium mb-3">Download Your DevSpec Pack</h2>
+                <h2 className="text-lg font-medium mb-3">Download Your Pack</h2>
                 <p className="text-sm text-gray-500 mb-6">
-                  Your purchase includes DEVSPEC.md, SKILL.md, and README with
-                  complete integration instructions for Auth.js + Stripe + Next.js
-                  App Router.
+                  Your purchase includes all pack files with complete setup
+                  instructions and AI-ready specifications.
                 </p>
                 <button
                   onClick={handleDownload}

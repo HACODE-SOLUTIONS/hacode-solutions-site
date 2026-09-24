@@ -125,7 +125,39 @@ export const devSpecs: DevSpec[] = [
     popular: true,
   },
 
-  // PAID Hero Product
+  // PAID - Active Product
+  {
+    id: "10",
+    slug: "inbox-os",
+    name: "Inbox OS",
+    description: "Grok Bot ready — Configure a small-business inbox brain for WhatsApp, Instagram DMs, and multi-chat orders without tab-hopping.",
+    longDescription: "Configure a Grok Bot agent that becomes your small-business inbox brain — WhatsApp, Instagram DMs, and other chats in one place — so you catch orders and manage conversations without tab-hopping. Not hosted bot seats, not Meta/WhatsApp Business API setup done-for-you, and not a CRM replacement. Pack only: prompts, skills, context, setup.",
+    isPaid: true,
+    price: 79,
+    stripePriceId: process.env.STRIPE_PRICE_ID_INBOX_OS || "",
+    features: [
+      "START-HERE.md — ≤60 min setup; load into Grok Bot; first conversation test",
+      "BUSINESS-CONTEXT.md — Fill-in: offer, hours, prices, FAQs, tone, do/don't",
+      "CHANNEL-MAP.md — WhatsApp / IG DM / email / other — what each channel is for",
+      "ORDER-INTAKE.md — Order fields, confirm/cancel scripts, handoff to human",
+      "INBOX-SKILL.md + .cursorrules — Triage → classify → draft reply → log → escalate",
+      "PROMPTS.md — Ready prompts: new lead, order confirm, FAQ, angry customer, after-hours",
+      "ESCALATION.md — When the bot must stop and ping a human",
+      "SAMPLE.md — Redacted before/after: messy DMs → clean order log + reply (≤10 min stranger path)",
+      "CHECKLIST.md · FAQ.md · CONTENTS.md — Done means X · footguns · exact zip list",
+      "Pack, not platform/channel: not InboxAgent email SaaS, not blank Grok Bot, not WhatsApp Business itself",
+      "Orders + multi-chat job: channel map + order intake + escalation — not email triage or social funnels alone",
+      "One-time digital SKU vs $15–$99+/mo SaaS or DFY installs",
+    ],
+    stack: ["Grok Bot", "Cursor", "ChatGPT Projects", "AI Agents", "Business Operations"],
+    diyTime: "8-20 hours",
+    whoFor: "Owners of small shops, studios, local services, and solo operators who already get orders and questions in WhatsApp / IG DMs and want one bot context that sorts, replies with guardrails, and logs what matters",
+    fileCount: 12,
+    category: "Operating Kits",
+    popular: true,
+  },
+
+  // PAID - Sunset Products (no longer for sale)
   {
     id: "6",
     slug: "saas-launch-kit",
@@ -135,6 +167,7 @@ export const devSpecs: DevSpec[] = [
     isPaid: true,
     price: 199,
     stripePriceId: process.env.STRIPE_PRICE_ID_SAAS_LAUNCH_KIT || "",
+    sunset: true,
     features: [
       "Complete Auth.js OAuth integration (GitHub, Google, Discord)",
       "Stripe Checkout + subscription billing with webhooks",
@@ -171,7 +204,6 @@ export const devSpecs: DevSpec[] = [
     sunset: true,
   },
 
-  // PAID Mid-Catalog DevSpecs
   {
     id: "7",
     slug: "mvp-auth-stripe-billing",
@@ -181,6 +213,7 @@ export const devSpecs: DevSpec[] = [
     isPaid: true,
     price: 49,
     stripePriceId: process.env.STRIPE_PRICE_ID_MVP_AUTH_STRIPE_BILLING || "",
+    sunset: true,
     features: [
       "START-HERE.md with 10-minute path: sign in → checkout → webhook → gated route",
       "DEVSPEC.md — Composed Auth + Stripe Billing system specification",
@@ -217,6 +250,7 @@ export const devSpecs: DevSpec[] = [
     isPaid: true,
     price: 39,
     stripePriceId: process.env.STRIPE_PRICE_ID_FREELANCER_CLIENT_ONBOARDING || "",
+    sunset: true,
     features: [
       "START-HERE.md — Setup ≤90 min; Notion/Docs/Markdown paths; how to invoke the skill",
       "Client intake questionnaire — Scope, budget, timeline, access, success metrics, decision-maker",
@@ -251,6 +285,7 @@ export const devSpecs: DevSpec[] = [
     isPaid: true,
     price: 35,
     stripePriceId: process.env.STRIPE_PRICE_ID_SALES_CALL_SCOPE_BRIEF_KIT || "",
+    sunset: true,
     features: [
       "START-HERE.md — ≤60 min setup; works with Markdown/Docs/Notion",
       "Discovery call agenda (timeboxed) + decision-maker check",

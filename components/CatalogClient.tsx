@@ -8,6 +8,7 @@ import { Reveal } from "@/components/Reveal";
 export default function CatalogClient() {
   const [filter, setFilter] = useState<"all" | "free" | "paid">("all");
 
+  // Filter out sunset products
   const activeSpecs = devSpecs.filter((s) => !s.sunset);
 
   const filteredSpecs =
