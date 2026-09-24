@@ -23,13 +23,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if product is sunset or unavailable
+    // Verify the product exists and is not sunset
     if (productSlug) {
-      const spec = getDevSpecBySlug(productSlug);
-      if (!spec || spec.sunset) {
+      const product = getDevSpecBySlug(productSlug);
+      if (!product || product.sunset) {
         return NextResponse.json(
           { error: "This product is no longer available for purchase." },
-          { status: 404 }
+          { status: 410 }
         );
       }
     }
@@ -45,9 +45,13 @@ export async function POST(request: NextRequest) {
       "https://hacode-solutions-site.vercel.app";
 
     // Build cancel_url: return to product page if slug provided, otherwise catalog
-    const cancelUrl = productSlug 
-      ? `${baseUrl}/devspec/${productSlug}`
-      : `${baseUrl}/catalog`;
+    let cancelUrl = `${baseUrl}/catalog`;
+    if (productSlug) {
+      // inbox-os is at root, others are under /devspec
+      cancelUrl = productSlug === "inbox-os" 
+        ? `${baseUrl}/inbox-os`
+        : `${baseUrl}/devspec/${productSlug}`;
+    }
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
