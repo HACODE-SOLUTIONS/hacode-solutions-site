@@ -25,12 +25,12 @@ export const metadata: Metadata = {
 
 export default function HomePage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-white px-6 py-12">
+    <div className="flex min-h-screen items-center justify-center bg-brand-black px-6 py-12 text-white">
       <h1 className="sr-only">HACODE Solutions</h1>
       <picture>
-        <source srcSet="/logo.webp" type="image/webp" />
+        <source srcSet="/logo-on-dark.webp" type="image/webp" />
         <img
-          src="/logo.png"
+          src="/logo-on-dark.png"
           alt="HACODE Solutions"
           width={778}
           height={898}
