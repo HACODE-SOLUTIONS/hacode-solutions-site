@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
@@ -6,6 +6,11 @@ import GoogleAnalytics from "@/components/GoogleAnalytics";
 const inter = Inter({ subsets: ["latin"] });
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://hacode.solutions";
+
+export const viewport: Viewport = {
+  themeColor: "#0A0A0B",
+  colorScheme: "dark",
+};
 
 export const metadata: Metadata = {
   title: "HACODE Solutions",
@@ -38,8 +43,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
+    <html
+      lang="en"
+      className="dark"
+      style={{ backgroundColor: "#0A0A0B", colorScheme: "dark" }}
+    >
+      <body
+        className={inter.className}
+        style={{ backgroundColor: "#0A0A0B", color: "#ffffff" }}
+      >
         <GoogleAnalytics />
         <main className="min-h-screen">{children}</main>
       </body>
