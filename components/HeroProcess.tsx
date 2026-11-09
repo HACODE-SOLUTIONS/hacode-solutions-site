@@ -32,12 +32,12 @@ const inputs = [
 
 const outcomes = [
   {
-    label: "Save time",
+    label: "Time saved",
     icon: <Clock aria-hidden="true" className="h-4 w-4" strokeWidth={1.75} />,
     motion: "hero-outcome hero-outcome-1",
   },
   {
-    label: "Save money",
+    label: "Money saved",
     icon: (
       <CircleDollarSign
         aria-hidden="true"
@@ -48,7 +48,7 @@ const outcomes = [
     motion: "hero-outcome hero-outcome-2",
   },
   {
-    label: "Replace manual work",
+    label: "Manual work eliminated",
     icon: (
       <ListChecks aria-hidden="true" className="h-4 w-4" strokeWidth={1.75} />
     ),
@@ -103,14 +103,14 @@ export default function HeroProcess() {
   return (
     <div
       aria-hidden="true"
-      className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[#101012] shadow-[0_24px_80px_-36px_rgba(139,92,246,0.55)]"
+      className="relative min-w-0 overflow-hidden rounded-[28px] border border-white/10 bg-[#101012] shadow-[0_24px_80px_-36px_rgba(139,92,246,0.55)]"
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(139,92,246,0.14),transparent_58%)]" />
       <div className="pointer-events-none absolute inset-0 opacity-80 [background-image:linear-gradient(to_right,rgba(255,255,255,0.045)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.045)_1px,transparent_1px)] [background-size:28px_28px]" />
       <div className="hero-glow pointer-events-none absolute left-1/2 top-[46%] h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-purple/30 blur-3xl" />
 
       <div className="relative px-4 py-6 sm:px-7 sm:py-8">
-        <ProcessLabel>Bottleneck</ProcessLabel>
+        <ProcessLabel>Bottlenecks</ProcessLabel>
         <div className="mt-4 grid grid-cols-3 gap-2.5 sm:gap-3">
           {inputs.map((item) => (
             <div key={item.label} className={item.motion}>
@@ -129,8 +129,8 @@ export default function HeroProcess() {
         <Beam />
 
         <div className="hero-node relative mx-auto w-fit rounded-2xl border border-brand-purple/70 bg-[#161222] px-7 py-4 text-center">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-200">
-            Automation
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-violet-200">
+            Behind the scenes
           </p>
           <p className="mt-1 text-xl font-semibold tracking-tight text-white">
             AI + cloud
@@ -139,7 +139,7 @@ export default function HeroProcess() {
 
         <Beam late />
 
-        <ProcessLabel>Outcomes</ProcessLabel>
+        <ProcessLabel>Delivered outcomes</ProcessLabel>
         <ul className="mt-4 space-y-2.5">
           {outcomes.map((item) => (
             <li

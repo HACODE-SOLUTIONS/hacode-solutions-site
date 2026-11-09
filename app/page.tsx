@@ -3,7 +3,7 @@ import Link from "next/link";
 import HeroProcess from "@/components/HeroProcess";
 
 const description =
-  "We analyze the bottlenecks holding your company back, then deliver automation with AI and cloud services to save time, money, and manual work.";
+  "HACODE is an AI-native service business delivering Outcomes as a Service. We find the bottlenecks slowing your company down and deliver the result — less time, lower cost, no manual work — not software.";
 
 export const metadata: Metadata = {
   title: "HACODE Solutions",
@@ -34,8 +34,8 @@ export default function HomePage() {
       aria-labelledby="hero-heading"
       className="flex min-h-screen flex-col bg-brand-black px-6 text-white sm:px-8 lg:px-10"
     >
-      <div className="mx-auto my-auto grid w-full max-w-6xl items-center gap-12 py-16 lg:grid-cols-[minmax(0,0.92fr)_minmax(300px,1.08fr)] lg:gap-14 xl:gap-20">
-        <div className="mx-auto max-w-xl text-center lg:mx-0 lg:max-w-none lg:text-left">
+      <div className="mx-auto my-auto grid w-full min-w-0 max-w-6xl items-center gap-12 py-16 lg:grid-cols-[minmax(0,0.92fr)_minmax(300px,1.08fr)] lg:gap-14 xl:gap-20">
+        <div className="w-full min-w-0 max-w-xl justify-self-center text-center lg:max-w-none lg:justify-self-stretch lg:text-left">
           <div className="mb-7 flex items-center justify-center gap-3 lg:justify-start">
             <picture>
               <source srcSet="/logo-on-dark.webp" type="image/webp" />
@@ -57,6 +57,16 @@ export default function HomePage() {
             </p>
           </div>
 
+          <div className="mb-5 flex w-full min-w-0 justify-center lg:justify-start">
+            <p className="min-w-0 max-w-full rounded-full border border-violet-300/30 bg-brand-purple/15 px-3.5 py-1.5 text-center text-[13px] font-medium leading-snug text-violet-100 sm:text-sm lg:text-left">
+              <span className="inline-block">AI-native service business</span>
+              <span aria-hidden="true" className="px-1.5 text-violet-300">
+                ·
+              </span>
+              <span className="inline-block">Outcomes as a Service</span>
+            </p>
+          </div>
+
           <h1
             id="hero-heading"
             className="text-balance text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl lg:text-[3.35rem]"
@@ -64,8 +74,10 @@ export default function HomePage() {
             Save time, save money, and replace manual work
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-zinc-300 lg:mx-0">
-            We analyze the bottlenecks holding your company back, then deliver
-            automation with AI and cloud services.
+            You pay for outcomes. We find the bottlenecks slowing your company
+            down and deliver the result — less time, lower cost, no manual
+            work. AI and cloud run behind the scenes. No software to buy or
+            manage.
           </p>
           <div className="mt-8">
             <Link
