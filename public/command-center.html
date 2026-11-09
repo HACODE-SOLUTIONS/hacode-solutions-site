@@ -1,0 +1,2385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0A0A0B">
+<meta name="description" content="HACODE Solutions command center. An isometric view of Outcomes as a Service: documents move through intake, AI processing, cloud validation, and delivery.">
+<title>Command center · HACODE Solutions</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0a0a0b;
+    --card: #121216;
+    --line: rgba(255, 255, 255, 0.08);
+    --text: #f4f1ff;
+    --muted: #a39bb8;
+    --violet: #8b5cf6;
+    --violet-2: #c4b5fd;
+    --good: #8ee0bc;
+    --warn: #f5c16c;
+    --bad: #f3a0a6;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+    color-scheme: dark;
+  }
+  body { min-height: 100dvh; }
+  button, input { font: inherit; color: inherit; }
+  button {
+    background: #1b1b22;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    min-height: 36px;
+    padding: 6px 12px;
+    cursor: pointer;
+    letter-spacing: 0.01em;
+  }
+  button:hover { border-color: rgba(196, 181, 253, 0.7); }
+  button:focus-visible, input:focus-visible {
+    outline: 2px solid var(--violet-2);
+    outline-offset: 2px;
+  }
+  button.primary { background: var(--violet); border-color: transparent; color: #fff; }
+  button.primary:hover { background: #7c4fe0; }
+  button.fix { border-color: rgba(245, 193, 108, 0.7); color: var(--warn); background: #241c12; }
+  button[hidden], .reply[hidden] { display: none; }
+  .app {
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background:
+      radial-gradient(900px 420px at 20% -10%, rgba(139, 92, 246, 0.16), transparent 60%),
+      var(--bg);
+  }
+  .top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 18px 6px;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .brand img { height: 40px; width: auto; display: block; }
+  .mark {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .mark span {
+    display: block;
+    margin-top: 2px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+  }
+  h1 {
+    margin: 2px 0 0;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: #ddd6fe;
+  }
+  .pill {
+    margin: 0;
+    max-width: 420px;
+    border: 1px solid rgba(196, 181, 253, 0.28);
+    background: rgba(139, 92, 246, 0.12);
+    color: #ede9fe;
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 13px;
+    line-height: 1.35;
+  }
+  .stage {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 400px);
+    gap: 14px;
+    padding: 4px 16px 16px;
+  }
+  .scene-wrap {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    border-radius: 24px;
+    border: 1px solid var(--line);
+    background: #07070a;
+    box-shadow: 0 24px 80px -36px rgba(139, 92, 246, 0.55);
+    overflow: hidden;
+  }
+  canvas { width: 100%; height: 100%; display: block; }
+  .caption {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    margin: 0;
+    padding: 8px 12px;
+    border-radius: 12px;
+    background: rgba(10, 10, 12, 0.78);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    color: #e7e2f8;
+    font-size: 13px;
+    line-height: 1.35;
+    pointer-events: none;
+  }
+  .side {
+    min-height: 0;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 12px;
+  }
+  .panel {
+    border: 1px solid var(--line);
+    background: rgba(18, 18, 22, 0.92);
+    border-radius: 22px;
+    padding: 10px 12px;
+  }
+  .panel-h {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  h2 { margin: 0; font-size: 15px; font-weight: 650; letter-spacing: 0.01em; }
+  .mode { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 99px;
+    background: var(--good);
+    box-shadow: 0 0 10px var(--good);
+  }
+  .dot.paused { background: var(--warn); box-shadow: 0 0 10px var(--warn); }
+  .dot.rush { background: var(--violet-2); box-shadow: 0 0 10px var(--violet); }
+  .dot.reduced { background: #9aa0b4; box-shadow: none; }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .stat {
+    margin: 0;
+    padding: 8px 10px 7px;
+    border-radius: 16px;
+    background: #0c0c10;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  .stat b {
+    display: block;
+    font-size: clamp(18px, 1.45vw, 26px);
+    font-weight: 650;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat span { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; line-height: 1.3; }
+  .hint { color: #7d7690; }
+  .line, .meter, .note {
+    margin: 4px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.35;
+  }
+  .line { color: #ddd6fe; }
+  .chat {
+    min-height: 0;
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: auto fit-content(360px) minmax(96px, 1fr) auto;
+    gap: 8px;
+  }
+  .chat .panel-h { margin: 0; }
+  .thread {
+    min-height: 0;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-right: 2px;
+  }
+  #pins {
+    min-height: 0;
+    overflow: auto;
+    display: grid;
+    gap: 8px;
+    align-content: start;
+    padding-right: 2px;
+  }
+  .card, .log {
+    border-radius: 16px;
+    border: 1px solid var(--line);
+    background: #14141a;
+    padding: 7px 10px 8px;
+  }
+  .card.warn { border-color: rgba(245, 193, 108, 0.45); }
+  .card.bad { border-color: rgba(243, 160, 166, 0.5); }
+  .card.good { border-color: rgba(142, 224, 188, 0.4); }
+  .card.info { border-color: rgba(196, 181, 253, 0.35); }
+  .card h3, .log-title { margin: 0; font-size: 14px; font-weight: 650; }
+  .body, .log-body { margin: 3px 0 0; color: #d5d0e2; font-size: 13px; line-height: 1.35; }
+  .status { margin: 4px 0 0; min-height: 1.15em; color: var(--violet-2); font-size: 12px; }
+  .actions, .reply { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .reply input {
+    flex: 1 1 140px;
+    min-height: 40px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: #0c0c10;
+    padding: 0 12px;
+    color: white;
+  }
+  #feed {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .log-top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+  .log time { color: #7d7690; font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .log.user { background: rgba(139, 92, 246, 0.16); margin-left: 12%; }
+  .log.good { border-color: rgba(142, 224, 188, 0.28); }
+  .log.warn { border-color: rgba(245, 193, 108, 0.28); }
+  .log.bad { border-color: rgba(243, 160, 166, 0.32); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chips button { flex: 1 1 calc(50% - 8px); }
+  .card.flash { box-shadow: 0 0 0 1px rgba(196, 181, 253, 0.8), 0 0 28px -8px rgba(139, 92, 246, 0.9); }
+  @media (prefers-reduced-motion: no-preference) {
+    .dot.live { animation: pulse 2.4s ease-in-out infinite; }
+    .thread { scroll-behavior: smooth; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .thread { scroll-behavior: auto; }
+    .card.flash { animation: none; }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.55; }
+    50% { opacity: 1; }
+  }
+  @media (min-width: 1600px) {
+    .stage { grid-template-columns: minmax(0, 1fr) 440px; padding-left: 22px; padding-right: 22px; }
+  }
+  @media (max-width: 760px) {
+    .top { flex-direction: column; align-items: flex-start; padding: 12px 14px 8px; }
+    .pill { font-size: 12px; }
+    .stage {
+      display: flex;
+      flex-direction: column;
+      overflow: auto;
+      gap: 10px;
+      padding: 0 12px 16px;
+    }
+    .scene-wrap { height: min(52dvh, 440px); min-height: 260px; flex: none; }
+    .side { display: flex; flex-direction: column; flex: none; }
+    .app { height: auto; min-height: 100dvh; overflow: visible; }
+    .chat { display: flex; flex-direction: column; overflow: visible; }
+    #pins { overflow: visible; min-height: auto; }
+    .thread { max-height: 420px; }
+    .stat b { font-size: 22px; }
+    button { min-height: 44px; }
+  }
+  @media (max-width: 420px) {
+    .brand img { height: 32px; }
+    .caption { font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <img src="logo-on-dark.webp" alt="" width="36" height="42">
+      <div>
+        <p class="mark">HACODE <span>Solutions</span></p>
+        <h1>Command center</h1>
+      </div>
+    </div>
+    <p class="pill">AI-native service business · Outcomes as a Service</p>
+  </header>
+  <div class="stage">
+    <div class="scene-wrap">
+      <canvas id="scene" aria-describedby="caption"></canvas>
+      <p class="caption" id="caption"></p>
+    </div>
+    <div class="side">
+      <section class="panel stats" aria-label="Live outcomes">
+        <div class="panel-h">
+          <h2>Live outcomes</h2>
+          <div class="mode"><span class="dot live" id="mode-dot"></span><span id="mode-label">Live</span></div>
+        </div>
+        <div class="stats-grid">
+          <p class="stat"><b id="n-docs">0</b><span>Documents processed</span></p>
+          <p class="stat"><b id="n-avg">0s</b><span>Avg processing time <span class="hint" id="n-avg-hint"></span></span></p>
+          <p class="stat"><b id="n-saved">0 hrs</b><span>Time saved</span></p>
+          <p class="stat"><b id="n-steps">0</b><span>Manual steps removed</span></p>
+        </div>
+        <p class="line" id="n-line"></p>
+        <p class="meter" id="n-meter"></p>
+        <p class="note" id="n-note"></p>
+      </section>
+      <section class="panel chat" aria-label="Activity">
+        <div class="panel-h">
+          <h2>Activity</h2>
+          <span class="mode" id="n-log-count"></span>
+        </div>
+        <div id="pins"></div>
+        <div class="thread" id="thread">
+          <div id="feed" role="log" aria-relevant="additions"></div>
+        </div>
+        <div class="chips" id="chips">
+          <button type="button" data-chip="rush">Rush the line</button>
+          <button type="button" data-chip="hold">Hold for review</button>
+          <button type="button" data-chip="fix">Fix flagged invoice</button>
+          <button type="button" data-chip="pause">Pause line</button>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+<noscript>The command center needs JavaScript to run the live pipeline.</noscript>
+<script>
+'use strict';
+/**
+ * One state graph drives the canvas, the stats, and the activity log.
+ * Pipeline time is work-milliseconds. Speed changes elapsed; reduced motion
+ * only slows the picture. Seed totals use the same formula as a live delivery.
+ */
+var MOVE = [700, 1000, 1000, 900];
+var PROC = [900, 1100, 1000, 900];
+var HAND = 650;
+var REWIND = 900;
+var NOM = HAND;
+for (var si = 0; si < 4; si++) NOM += MOVE[si] + PROC[si];
+var STEPS = 7;
+var MANUAL_MIN = 18;
+var RING = 24;
+var SEED_N = 1284;
+var RUSH_SPEED = 2.2;
+var COS = Math.cos(Math.PI / 6);
+var SIN = Math.sin(Math.PI / 6);
+var PATH_N = 96;
+var ST_SHORT = ['intake', 'AI', 'cloud', 'delivery'];
+var ST_WIDE = ['Intake', 'AI processing', 'Cloud validation', 'Delivery'];
+var ST_TALL = ['Intake', 'AI', 'Cloud', 'Delivery'];
+
+var state = {
+  paused: false,
+  reduced: false,
+  rushNext: false,
+  rushLeft: 0,
+  reviewNext: false,
+  flagNext: false,
+  docsProcessed: SEED_N,
+  stepsRemoved: SEED_N * STEPS,
+  savedMin: SEED_N * (MANUAL_MIN - NOM / 60000),
+  docs: [],
+  messages: [],
+  statsRev: 1,
+  sceneRev: 1,
+  chipRev: 1,
+  modeRev: 1
+};
+var recent = new Float64Array(RING);
+var recentSum = 0;
+var recentIdx = 0;
+for (var ri = 0; ri < RING; ri++) {
+  recent[ri] = NOM;
+  recentSum += NOM;
+}
+var nextNum = 1043;
+var flagDoc = null;
+var reviewDoc = null;
+var pool = [];
+var sender = blankActor();
+var receiver = blankActor();
+sender.phase = 'toDrop';
+sender.dur = 1.7;
+sender.left = 1.7;
+sender.carryNum = 1043;
+sender.carryLabel = '#1043';
+sender.wait = 0.4;
+receiver.wait = 1.6;
+
+var cssW = 0;
+var cssH = 0;
+var dpr = 1;
+var unit = 40;
+var originX = 0;
+var originY = 0;
+var tall = false;
+var viewDirty = true;
+var builtCache = false;
+var stationU = new Float32Array(4);
+var PATH = new Float32Array(PATH_N * 2);
+var pocketX = new Float32Array(4);
+var pocketY = new Float32Array(4);
+var beltGx = new Float32Array(5);
+var beltGy = new Float32Array(5);
+var stGx = new Float32Array(4);
+var stGy = new Float32Array(4);
+var stations = [
+  blankStation(0),
+  blankStation(1),
+  blankStation(2),
+  blankStation(3)
+];
+var senderIdleX = 0, senderIdleY = 0, senderDropX = 0, senderDropY = 0;
+var recvIdleX = 0, recvIdleY = 0, recvTakeX = 0, recvTakeY = 0;
+var senderIdleGx = 0, senderIdleGy = 0, senderDropGx = 0, senderDropGy = 0;
+var recvIdleGx = 0, recvIdleGy = 0, recvTakeGx = 0, recvTakeGy = 0;
+var BOX = 1.28;
+var BOXH = 1.08;
+var fontLabel = '600 13px Inter, sans-serif';
+var fontSmall = '600 11px Inter, sans-serif';
+var floorCache = null;
+var floorCtx = null;
+var glowV, glowA, glowR, glowG;
+var glowSprites;
+var glowColors = ['#8B5CF6', '#F5C16C', '#F07178', '#7DDCB0'];
+var docSprites = [];
+var stepSmooth = 0;
+var dashPhase = 0;
+var visT = 0;
+var scr = { x: 0, y: 0 };
+var C = new Float32Array(16);
+var TOP = new Float32Array(4 * 8);
+var workRing = new Float64Array(120);
+var workCount = 0;
+var workIdx = 0;
+var workSum = 0;
+var workAvg = 0;
+var frameIndex = 0;
+var fpsShown = 0;
+var fpsAcc = 0;
+var fpsN = 0;
+var lastNow = 0;
+var lastMeter = 0;
+var liveN = 0;
+var lineText = '';
+var captionText = '';
+var sceneSeen = 0;
+var statsSeen = 0;
+var chipSeen = 0;
+var modeSeen = 0;
+var pressedEl = null;
+var overInteractive = null;
+var hitN = 0;
+var HX = new Float32Array(10);
+var HY = new Float32Array(10);
+var HW = new Float32Array(10);
+var HH = new Float32Array(10);
+var HID = new Int16Array(10);
+var cursorOn = false;
+var handX = 0;
+var handY = 0;
+var EX = new Float32Array(12);
+var EY = new Float32Array(12);
+var ETYPE = new Int8Array(12);
+var EID = new Int16Array(12);
+var order = new Int8Array(12);
+
+var wrap = document.querySelector('.scene-wrap');
+var canvas = document.getElementById('scene');
+var ctx = canvas.getContext('2d', { alpha: false });
+var els = {
+  docs: document.getElementById('n-docs'),
+  avg: document.getElementById('n-avg'),
+  avgHint: document.getElementById('n-avg-hint'),
+  saved: document.getElementById('n-saved'),
+  steps: document.getElementById('n-steps'),
+  line: document.getElementById('n-line'),
+  meter: document.getElementById('n-meter'),
+  note: document.getElementById('n-note'),
+  caption: document.getElementById('caption'),
+  mode: document.getElementById('mode-label'),
+  dot: document.getElementById('mode-dot'),
+  count: document.getElementById('n-log-count'),
+  feed: document.getElementById('feed'),
+  thread: document.getElementById('thread'),
+  pins: document.getElementById('pins'),
+  chips: document.getElementById('chips')
+};
+var chipBtns = els.chips.querySelectorAll('button');
+
+var flagMsg = {
+  tone: 'bad',
+  title: 'Invoice #1038 flagged',
+  body: 'Vendor name unreadable. Held at AI processing.',
+  status: 'Waiting for a fix.',
+  showApprove: false,
+  showSkip: false,
+  showReply: false,
+  showFix: true,
+  replyOpen: false,
+  focusReply: false
+};
+var reviewMsg = {
+  tone: 'warn',
+  title: 'Invoice #1042 needs review',
+  body: 'Total does not match the purchase order.',
+  status: 'Needs a decision.',
+  showApprove: true,
+  showSkip: true,
+  showReply: true,
+  showFix: false,
+  replyOpen: false,
+  focusReply: false
+};
+var cardFlag = buildCard('flag', flagMsg);
+var cardReview = buildCard('review', reviewMsg);
+els.pins.appendChild(cardFlag.root);
+els.pins.appendChild(cardReview.root);
+
+function blankActor() {
+  return {
+    phase: 'idle',
+    left: 0.4,
+    dur: 0.4,
+    step: 0,
+    eye: 1,
+    blink: -1,
+    wait: 2,
+    happy: 0,
+    carryNum: 0,
+    carryLabel: ''
+  };
+}
+function blankStation(i) {
+  return { i: i, sx: 0, sy: 0, lx: 0, ly: 0, heat: 0, want: 0, mode: 0, wantMode: 0 };
+}
+function blankDoc() {
+  return {
+    dead: false,
+    num: 0,
+    kind: 'auto',
+    label: '',
+    phase: 'run',
+    seg: 0,
+    left: 0,
+    dur: 1,
+    u: 0,
+    u0: 0,
+    u1: 0,
+    shift: 0,
+    speed: 1,
+    visual: 0,
+    elapsed: 0,
+    counted: false,
+    note: '',
+    noteShort: '',
+    noteWidth: 0,
+    fixed: false,
+    approved: false,
+    wantsFlag: false,
+    wantsReview: false,
+    holdStation: 0,
+    times: true
+  };
+}
+function takeDoc() {
+  return pool.pop() || blankDoc();
+}
+function sumSegs(from, to) {
+  var t = 0;
+  for (var s = from; s <= to; s++) t += (s & 1) === 0 ? MOVE[s >> 1] : PROC[s >> 1];
+  return t;
+}
+function bumpScene() { state.sceneRev++; }
+function bumpChips() { state.chipRev++; }
+function bumpMode() { state.modeRev++; }
+
+function createHeld(num, kind, station) {
+  var doc = takeDoc();
+  doc.dead = false;
+  doc.num = num;
+  doc.kind = kind;
+  doc.label = '#' + num;
+  doc.phase = 'hold';
+  doc.holdStation = station;
+  doc.shift = 1;
+  doc.speed = 1;
+  doc.visual = kind === 'flag' ? 3 : 1;
+  doc.elapsed = kind === 'review' ? sumSegs(0, 4) : 0;
+  doc.counted = false;
+  doc.fixed = false;
+  doc.approved = false;
+  doc.wantsFlag = kind === 'flag';
+  doc.wantsReview = false;
+  doc.note = '';
+  doc.noteShort = '';
+  doc.noteWidth = 0;
+  doc.seg = station === 1 ? 3 : 5;
+  doc.u = 0;
+  doc.times = true;
+  state.docs.push(doc);
+  return doc;
+}
+
+flagDoc = createHeld(1038, 'flag', 1);
+reviewDoc = createHeld(1042, 'review', 2);
+
+function rnd() {
+  return Math.random();
+}
+function clamp01(t) {
+  if (t < 0) return 0;
+  if (t > 1) return 1;
+  return t;
+}
+function smooth(t) {
+  t = clamp01(t);
+  return t * t * (3 - 2 * t);
+}
+function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+function stamp() {
+  var d = new Date();
+  return pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds());
+}
+function fmtInt(n) { return Math.round(n).toLocaleString('en-US'); }
+function fmtSec(ms) { return (Math.round(ms / 100) / 10).toFixed(1) + 's'; }
+function fmtHrs(min) { return (Math.round((min / 60) * 10) / 10).toFixed(1) + ' hrs'; }
+function setText(node, text) {
+  if (node && node.textContent !== text) node.textContent = text;
+}
+function modeKey() {
+  if (state.paused) return 'paused';
+  if (state.reduced) return 'reduced';
+  if (rushing()) return 'rush';
+  return 'live';
+}
+function modeLabel() {
+  var k = modeKey();
+  if (k === 'paused') return 'Paused';
+  if (k === 'reduced') return 'Reduced motion';
+  if (k === 'rush') return 'Rushing';
+  return 'Live';
+}
+function rushing() {
+  if (state.rushNext) return true;
+  for (var i = 0; i < state.docs.length; i++) {
+    var d = state.docs[i];
+    if (!d.dead && d.speed > 1) return true;
+  }
+  return false;
+}
+function placeName(d) {
+  if (d.phase === 'hold' && d.kind === 'flag') return 'flagged at AI';
+  if (d.phase === 'hold') return 'waiting for review';
+  if (d.phase === 'rewind') return 'heading back to intake';
+  if (d.phase === 'skip') return 'leaving the line';
+  if (d.phase === 'hand' || d.phase === 'fade') return 'at delivery';
+  var st = d.seg >> 1;
+  if (st > 3) st = 3;
+  if ((d.seg & 1) === 0 && d.seg < 8) return 'heading to ' + ST_SHORT[st];
+  return 'at ' + ST_SHORT[st];
+}
+function buildLine() {
+  var n = 0;
+  var s = '';
+  for (var i = 0; i < state.docs.length; i++) {
+    var d = state.docs[i];
+    if (d.dead) continue;
+    if (n) s += ' · ';
+    s += d.label + ' ' + placeName(d);
+    n++;
+  }
+  liveN = n;
+  lineText = n ? s : 'Line clear';
+}
+function buildCaption() {
+  var prefix = '';
+  if (!state.paused && rushing()) prefix = 'Rush is on. ';
+  if (state.paused) {
+    captionText = 'Line paused. Every document is holding its place.';
+    return;
+  }
+  if (sender.phase === 'toDrop' || sender.phase === 'place') {
+    captionText = prefix + 'You are walking invoice #' + sender.carryNum + ' to intake.';
+    return;
+  }
+  var best = null;
+  for (var i = 0; i < state.docs.length; i++) {
+    var d = state.docs[i];
+    if (d.dead) continue;
+    if (d.phase === 'rewind') {
+      captionText = prefix + 'Invoice #' + d.num + ' is heading back to intake for a clean pass.';
+      return;
+    }
+    if (d.phase === 'run' || d.phase === 'hand') best = d;
+  }
+  if (best) {
+    captionText = prefix + 'Invoice #' + best.num + ' is ' + placeName(best) + '.';
+    return;
+  }
+  if (sender.phase === 'toIdle') {
+    captionText = prefix + 'Walking back for the next document.';
+    return;
+  }
+  captionText = prefix + 'The line is waiting for the next handoff.';
+}
+
+function pushFeed(tone, title, body, user) {
+  var msg = { tone: tone, title: title, body: body, time: stamp(), user: !!user };
+  state.messages.push(msg);
+  var row = document.createElement('article');
+  row.className = 'log' + (user ? ' user' : '') + (tone ? ' ' + tone : '');
+  var top = document.createElement('div');
+  top.className = 'log-top';
+  var h = document.createElement('p');
+  h.className = 'log-title';
+  h.textContent = title;
+  var time = document.createElement('time');
+  time.textContent = msg.time;
+  top.appendChild(h);
+  top.appendChild(time);
+  var b = document.createElement('p');
+  b.className = 'log-body';
+  b.textContent = body;
+  row.appendChild(top);
+  row.appendChild(b);
+  els.feed.appendChild(row);
+  while (els.feed.children.length > 36) {
+    var oldest = els.feed.children[0];
+    if (oldest.contains(pressedEl) || oldest.contains(overInteractive)) break;
+    var sel = document.getSelection();
+    if (sel && sel.anchorNode && oldest.contains(sel.anchorNode)) break;
+    els.feed.removeChild(oldest);
+  }
+  setText(els.count, els.feed.children.length + ' shown');
+  var ae = document.activeElement;
+  var typing = ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA');
+  var box = els.thread;
+  var near = box.scrollHeight - box.scrollTop - box.clientHeight < 120;
+  if (!typing && near && !box.matches(':hover')) box.scrollTop = box.scrollHeight;
+}
+function buildCard(pin, msg) {
+  var root = document.createElement('article');
+  root.dataset.pin = pin;
+  var title = document.createElement('h3');
+  var body = document.createElement('p');
+  body.className = 'body';
+  var status = document.createElement('p');
+  status.className = 'status';
+  var actions = document.createElement('div');
+  actions.className = 'actions';
+  function btn(act, label, cls) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.dataset.act = act;
+    if (cls) b.className = cls;
+    b.textContent = label;
+    actions.appendChild(b);
+    return b;
+  }
+  var approve = btn('approve', 'Approve', 'primary');
+  var skip = btn('skip', 'Skip', '');
+  var reply = btn('reply', 'Reply', '');
+  var fix = btn('fix', 'Fix', 'fix');
+  var form = document.createElement('form');
+  form.className = 'reply';
+  form.hidden = true;
+  var input = document.createElement('input');
+  input.type = 'text';
+  input.maxLength = 180;
+  input.placeholder = 'Reply to this invoice…';
+  input.setAttribute('aria-label', 'Reply');
+  input.autocomplete = 'off';
+  var send = document.createElement('button');
+  send.type = 'submit';
+  send.className = 'primary';
+  send.textContent = 'Send';
+  form.appendChild(input);
+  form.appendChild(send);
+  root.appendChild(title);
+  root.appendChild(body);
+  root.appendChild(status);
+  root.appendChild(actions);
+  root.appendChild(form);
+  return {
+    root: root, msg: msg, title: title, body: body, status: status,
+    approve: approve, skip: skip, reply: reply, fix: fix,
+    form: form, input: input, dirty: true
+  };
+}
+function setHidden(btn, hide) {
+  if (hide && (btn === pressedEl || btn === overInteractive)) return false;
+  btn.hidden = hide;
+  return true;
+}
+function syncCard(card) {
+  if (!card.dirty) return;
+  var m = card.msg;
+  setText(card.title, m.title);
+  setText(card.body, m.body);
+  setText(card.status, m.status);
+  card.root.className = 'card ' + m.tone + (card.root.classList.contains('flash') ? ' flash' : '');
+  var ok = true;
+  if (!setHidden(card.approve, !m.showApprove)) ok = false;
+  if (!setHidden(card.skip, !m.showSkip)) ok = false;
+  if (!setHidden(card.reply, !m.showReply)) ok = false;
+  if (!setHidden(card.fix, !m.showFix)) ok = false;
+  if (!(m.replyOpen === false && (card.form.contains(pressedEl) || card.form.contains(overInteractive) || card.form.contains(document.activeElement)))) {
+    card.form.hidden = !m.replyOpen;
+  } else if (m.replyOpen) {
+    card.form.hidden = false;
+  } else {
+    ok = false;
+  }
+  if (m.focusReply && !card.form.hidden) {
+    m.focusReply = false;
+    card.input.focus();
+  }
+  if (ok) card.dirty = false;
+}
+function flashCard(card) {
+  if (!card) return;
+  card.root.classList.add('flash');
+  setTimeout(function () { card.root.classList.remove('flash'); }, 1200);
+}
+function renderStats() {
+  setText(els.docs, fmtInt(state.docsProcessed));
+  setText(els.avg, fmtSec(recentSum / RING));
+  setText(els.saved, fmtHrs(state.savedMin));
+  setText(els.steps, fmtInt(state.stepsRemoved));
+}
+function syncChips() {
+  setText(chipBtns[0], 'Rush the line');
+  if (reviewDoc && !reviewDoc.dead) setText(chipBtns[1], 'Focus #' + reviewDoc.num);
+  else setText(chipBtns[1], 'Hold for review');
+  if (flagDoc && !flagDoc.dead) {
+    if (flagDoc.phase === 'hold' && !flagDoc.fixed) setText(chipBtns[2], 'Fix #' + flagDoc.num);
+    else if (flagDoc.fixed || flagDoc.phase === 'rewind') setText(chipBtns[2], 'Reprocessing #' + flagDoc.num);
+    else setText(chipBtns[2], 'Flagging #' + flagDoc.num);
+  } else setText(chipBtns[2], 'Flag an invoice');
+  setText(chipBtns[3], state.paused ? 'Resume line' : 'Pause line');
+}
+function syncDom(now) {
+  syncCard(cardFlag);
+  syncCard(cardReview);
+  if (state.chipRev !== chipSeen) {
+    syncChips();
+    chipSeen = state.chipRev;
+  }
+  if (state.statsRev !== statsSeen) {
+    renderStats();
+    statsSeen = state.statsRev;
+  }
+  if (state.sceneRev !== sceneSeen) {
+    buildLine();
+    buildCaption();
+    setText(els.line, lineText);
+    setText(els.caption, captionText);
+    canvas.setAttribute('aria-label', captionText);
+    sceneSeen = state.sceneRev;
+    composeMeter();
+    lastMeter = now;
+  }
+  if (state.modeRev !== modeSeen) {
+    setText(els.mode, modeLabel());
+    els.dot.className = 'dot ' + modeKey();
+    document.body.classList.toggle('reduced', state.reduced);
+    modeSeen = state.modeRev;
+  }
+  if (now - lastMeter > 250) {
+    lastMeter = now;
+    composeMeter();
+  }
+}
+function composeMeter() {
+  var ms = workCount > 20 ? (Math.round(workAvg * 10) / 10).toFixed(1) + ' ms' : 'measuring';
+  var fps = workCount > 20 ? String(Math.round(fpsShown)) + ' fps' : '— fps';
+  setText(els.meter, liveN + ' on the line · ' + fps + ' · ' + ms);
+}
+
+function project(gx, gy, gz, into, i) {
+  into[i] = originX + (gx - gy) * COS * unit;
+  into[i + 1] = originY + (gx + gy) * SIN * unit - gz * unit;
+}
+function projectXY(gx, gy, gz) {
+  scr.x = originX + (gx - gy) * COS * unit;
+  scr.y = originY + (gx + gy) * SIN * unit - gz * unit;
+}
+function pathPoint(u) {
+  if (u < 0) u = 0;
+  else if (u > 1) u = 1;
+  var f = u * (PATH_N - 1);
+  var i = f | 0;
+  var t = f - i;
+  if (i >= PATH_N - 1) { i = PATH_N - 2; t = 1; }
+  var j = i * 2;
+  var k = j + 2;
+  scr.x = PATH[j] + (PATH[k] - PATH[j]) * t;
+  scr.y = PATH[j + 1] + (PATH[k + 1] - PATH[j + 1]) * t;
+}
+function polyPoint(px, py, pl, n, dist) {
+  var i = 1;
+  while (i < n - 1 && pl[i] < dist) i++;
+  var span = pl[i] - pl[i - 1] || 1;
+  var t = (dist - pl[i - 1]) / span;
+  scr.x = px[i - 1] + (px[i] - px[i - 1]) * t;
+  scr.y = py[i - 1] + (py[i] - py[i - 1]) * t;
+}
+
+function layout() {
+  var w = wrap.clientWidth;
+  var h = wrap.clientHeight;
+  var nextDpr = Math.min(2, window.devicePixelRatio || 1);
+  if (w < 2 || h < 2) return;
+  tall = w < 760;
+  fillGrid();
+  var minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9;
+  function consider(gx, gy) {
+    var x = (gx - gy) * COS;
+    var y = (gx + gy) * SIN;
+    if (x < minX) minX = x;
+    if (y < minY) minY = y;
+    if (x > maxX) maxX = x;
+    if (y > maxY) maxY = y;
+  }
+  for (var i = 0; i < 5; i++) consider(beltGx[i], beltGy[i]);
+  for (var s = 0; s < 4; s++) {
+    consider(stGx[s], stGy[s]);
+    consider(stGx[s] + BOX, stGy[s]);
+    consider(stGx[s], stGy[s] + BOX);
+    consider(stGx[s] + BOX, stGy[s] + BOX);
+  }
+  consider(senderIdleGx, senderIdleGy);
+  consider(senderDropGx, senderDropGy);
+  consider(recvIdleGx, recvIdleGy);
+  consider(recvTakeGx, recvTakeGy);
+  var bw = maxX - minX;
+  var bh = maxY - minY;
+  var padX = tall ? 26 : 40;
+  var padTop = tall ? 12 : 18;
+  var padBot = tall ? 78 : 72;
+  var head = 1.55;
+  unit = Math.min((w - padX * 2) / bw, (h - padTop - padBot) / (bh + head));
+  if (unit > (tall ? 52 : 60)) unit = tall ? 52 : 60;
+  if (unit < 16) unit = 16;
+  originX = padX + (w - padX * 2 - bw * unit) / 2 - minX * unit;
+  originY = padTop + head * unit + ((h - padTop - padBot) - (bh + head) * unit) / 2 - minY * unit;
+  var px = new Float32Array(5);
+  var py = new Float32Array(5);
+  var pl = new Float32Array(5);
+  for (var b = 0; b < 5; b++) {
+    projectXY(beltGx[b], beltGy[b], 0.12);
+    px[b] = scr.x;
+    py[b] = scr.y;
+  }
+  pl[0] = 0;
+  for (var p = 1; p < 5; p++) {
+    var dx = px[p] - px[p - 1];
+    var dy = py[p] - py[p - 1];
+    pl[p] = pl[p - 1] + Math.hypot(dx, dy);
+  }
+  var total = pl[4] || 1;
+  for (var n = 0; n < PATH_N; n++) {
+    polyPoint(px, py, pl, 5, (n / (PATH_N - 1)) * total);
+    PATH[n * 2] = scr.x;
+    PATH[n * 2 + 1] = scr.y;
+  }
+  for (var u = 0; u < 4; u++) stationU[u] = pl[u + 1] / total;
+  projectXY(senderIdleGx, senderIdleGy, 0);
+  senderIdleX = scr.x; senderIdleY = scr.y;
+  projectXY(senderDropGx, senderDropGy, 0);
+  senderDropX = scr.x; senderDropY = scr.y;
+  projectXY(recvIdleGx, recvIdleGy, 0);
+  recvIdleX = scr.x; recvIdleY = scr.y;
+  projectXY(recvTakeGx, recvTakeGy, 0);
+  recvTakeX = scr.x; recvTakeY = scr.y;
+  var labelPx = Math.max(11, Math.min(15, unit * 0.22));
+  fontLabel = '600 ' + Math.round(labelPx) + 'px Inter, sans-serif';
+  fontSmall = '600 ' + Math.round(Math.max(10, labelPx - 2)) + 'px Inter, sans-serif';
+  var bwPx = Math.max(1, Math.round(w * nextDpr));
+  var bhPx = Math.max(1, Math.round(h * nextDpr));
+  if (canvas.width !== bwPx || canvas.height !== bhPx) {
+    canvas.width = bwPx;
+    canvas.height = bhPx;
+  }
+  bake(w, h, nextDpr);
+  placePockets();
+  placeHeld();
+  cssW = w;
+  cssH = h;
+  dpr = nextDpr;
+  viewDirty = false;
+  builtCache = true;
+}
+function fillGrid() {
+  BOX = tall ? 0.9 : 1.28;
+  BOXH = tall ? 0.74 : 1.08;
+  if (!tall) {
+    for (var i = 0; i < 5; i++) {
+      beltGx[i] = i * 2.55;
+      beltGy[i] = 0;
+    }
+    for (var s = 0; s < 4; s++) {
+      stGx[s] = beltGx[s + 1] - 0.64;
+      stGy[s] = -1.62;
+    }
+    senderIdleGx = -1.45; senderIdleGy = 1.65;
+    senderDropGx = 0.05; senderDropGy = 0.48;
+    recvIdleGx = beltGx[4] + 1.35; recvIdleGy = 1.72;
+    recvTakeGx = beltGx[4] + 0.22; recvTakeGy = 0.55;
+  } else {
+    for (var j = 0; j < 5; j++) {
+      beltGx[j] = j * 2.15;
+      beltGy[j] = j * 2.15;
+    }
+    for (var k = 0; k < 4; k++) {
+      stGx[k] = beltGx[k + 1] + 0.02;
+      stGy[k] = beltGy[k + 1] - (BOX + 0.28);
+    }
+    senderIdleGx = -1.25; senderIdleGy = 0.85;
+    senderDropGx = -0.05; senderDropGy = 0.28;
+    recvIdleGx = beltGx[4] - 0.35; recvIdleGy = beltGy[4] + 0.95;
+    recvTakeGx = beltGx[4] + 0.05; recvTakeGy = beltGy[4] + 0.42;
+  }
+}
+function placePockets() {
+  for (var s = 0; s < 4; s++) {
+    pathPoint(stationU[s]);
+    var ax = scr.x;
+    var ay = scr.y;
+    var f = stationU[s] * (PATH_N - 1);
+    var i = f | 0;
+    if (i >= PATH_N - 2) i = PATH_N - 2;
+    var dx = PATH[(i + 1) * 2] - PATH[i * 2];
+    var dy = PATH[(i + 1) * 2 + 1] - PATH[i * 2 + 1];
+    var len = Math.hypot(dx, dy) || 1;
+    var px = -dy / len;
+    var py = dx / len;
+    var dot = px * (stations[s].sx - ax) + py * (stations[s].sy - ay);
+    if (dot < 0) { px = -px; py = -py; }
+    pocketX[s] = px * unit * 0.78;
+    pocketY[s] = py * unit * 0.78;
+  }
+}
+function placeHeld() {
+  for (var i = 0; i < state.docs.length; i++) {
+    var d = state.docs[i];
+    if (d.phase === 'hold') d.u = stationU[d.holdStation];
+  }
+}
+function trace(g, a, o) {
+  g.beginPath();
+  g.moveTo(a[o], a[o + 1]);
+  g.lineTo(a[o + 2], a[o + 3]);
+  g.lineTo(a[o + 4], a[o + 5]);
+  g.lineTo(a[o + 6], a[o + 7]);
+  g.closePath();
+}
+function bake(w, h, ratio) {
+  var bw = Math.max(1, Math.round(w * ratio));
+  var bh = Math.max(1, Math.round(h * ratio));
+  if (!floorCache) {
+    floorCache = document.createElement('canvas');
+    floorCtx = floorCache.getContext('2d');
+  }
+  if (floorCache.width !== bw || floorCache.height !== bh) {
+    floorCache.width = bw;
+    floorCache.height = bh;
+    floorCtx = floorCache.getContext('2d');
+  }
+  var g = floorCtx;
+  g.setTransform(ratio, 0, 0, ratio, 0, 0);
+  g.clearRect(0, 0, w, h);
+  g.fillStyle = '#07070a';
+  g.fillRect(0, 0, w, h);
+  pathPoint(0.5);
+  var glow = g.createRadialGradient(scr.x, scr.y, unit * 0.4, scr.x, scr.y, unit * 7.5);
+  glow.addColorStop(0, 'rgba(139,92,246,0.18)');
+  glow.addColorStop(1, 'rgba(139,92,246,0)');
+  g.fillStyle = glow;
+  g.fillRect(0, 0, w, h);
+  g.lineWidth = 1;
+  for (var gy = -8; gy <= 16; gy++) {
+    for (var gx = -8; gx <= 16; gx++) {
+      project(gx, gy, 0, C, 0);
+      project(gx + 1, gy, 0, C, 2);
+      project(gx + 1, gy + 1, 0, C, 4);
+      project(gx, gy + 1, 0, C, 6);
+      if (C[0] < -unit || C[1] < -unit || C[0] > w + unit || C[1] > h + unit * 2) continue;
+      var near = tall ? Math.abs(gx - gy) <= 1 : (gy >= -1 && gy <= 1);
+      g.fillStyle = near ? ((gx + gy) & 1 ? '#14121c' : '#121018') : ((gx + gy) & 1 ? '#101014' : '#0d0d11');
+      trace(g, C, 0);
+      g.fill();
+      g.strokeStyle = near ? 'rgba(167,139,250,0.16)' : 'rgba(255,255,255,0.035)';
+      g.stroke();
+    }
+  }
+  g.lineJoin = 'round';
+  var hw = 0.34;
+  for (var seg = 0; seg < 4; seg++) {
+    var x0 = beltGx[seg], y0 = beltGy[seg], x1 = beltGx[seg + 1], y1 = beltGy[seg + 1];
+    var dx = x1 - x0, dy = y1 - y0;
+    var len = Math.hypot(dx, dy) || 1;
+    var px = -dy / len * hw, py = dx / len * hw;
+    project(x0 + px, y0 + py, 0.02, C, 0);
+    project(x1 + px, y1 + py, 0.02, C, 2);
+    project(x1 - px, y1 - py, 0.02, C, 4);
+    project(x0 - px, y0 - py, 0.02, C, 6);
+    g.fillStyle = '#1a1526';
+    trace(g, C, 0);
+    g.fill();
+    g.strokeStyle = 'rgba(196,181,253,0.28)';
+    g.stroke();
+    project(x0 + px, y0 + py, 0.1, C, 0);
+    project(x1 + px, y1 + py, 0.1, C, 2);
+    project(x1 - px, y1 - py, 0.1, C, 4);
+    project(x0 - px, y0 - py, 0.1, C, 6);
+    g.fillStyle = '#241c33';
+    trace(g, C, 0);
+    g.fill();
+    g.strokeStyle = 'rgba(226,214,255,0.35)';
+    g.lineWidth = 1.25;
+    g.stroke();
+  }
+  for (var s = 0; s < 4; s++) paintStation(g, s);
+  if (tall) {
+    for (var lab = 0; lab < 4; lab++) {
+      stations[lab].lx = stations[lab].sx + unit * 0.95;
+      stations[lab].ly = stations[lab].sy;
+    }
+  }
+}
+function paintStation(g, s) {
+  var x = stGx[s], y = stGy[s], w = BOX, d = BOX, h = BOXH;
+  function put(gx, gy, gz, i) { project(gx, gy, gz, C, i); }
+  put(x, y, 0, 0);
+  put(x + w, y, 0, 2);
+  put(x + w, y + d, 0, 4);
+  put(x, y + d, 0, 6);
+  put(x, y, h, 8);
+  put(x + w, y, h, 10);
+  put(x + w, y + d, h, 12);
+  put(x, y + d, h, 14);
+  var base = s * 8;
+  TOP[base] = C[8]; TOP[base + 1] = C[9];
+  TOP[base + 2] = C[10]; TOP[base + 3] = C[11];
+  TOP[base + 4] = C[12]; TOP[base + 5] = C[13];
+  TOP[base + 6] = C[14]; TOP[base + 7] = C[15];
+  stations[s].sx = (C[8] + C[10] + C[12] + C[14]) / 4;
+  stations[s].sy = (C[9] + C[11] + C[13] + C[15]) / 4;
+  var maxY = C[1];
+  var labelX = C[0];
+  for (var i = 0; i < 8; i += 2) {
+    if (C[i + 1] > maxY) { maxY = C[i + 1]; labelX = C[i]; }
+  }
+  stations[s].lx = (C[0] + C[2] + C[4] + C[6]) / 4;
+  stations[s].ly = maxY + Math.max(14, unit * 0.28);
+  g.fillStyle = 'rgba(42,32,68,0.96)';
+  g.beginPath();
+  g.moveTo(C[2], C[3]);
+  g.lineTo(C[4], C[5]);
+  g.lineTo(C[12], C[13]);
+  g.lineTo(C[10], C[11]);
+  g.closePath();
+  g.fill();
+  g.fillStyle = 'rgba(64,48,108,0.94)';
+  g.beginPath();
+  g.moveTo(C[4], C[5]);
+  g.lineTo(C[6], C[7]);
+  g.lineTo(C[14], C[15]);
+  g.lineTo(C[12], C[13]);
+  g.closePath();
+  g.fill();
+  var grad = g.createLinearGradient(C[8], C[9], C[12], C[13]);
+  grad.addColorStop(0, 'rgba(255,255,255,0.38)');
+  grad.addColorStop(0.28, 'rgba(198,184,255,0.2)');
+  grad.addColorStop(1, 'rgba(70,52,120,0.18)');
+  g.fillStyle = grad;
+  g.beginPath();
+  g.moveTo(C[8], C[9]);
+  g.lineTo(C[10], C[11]);
+  g.lineTo(C[12], C[13]);
+  g.lineTo(C[14], C[15]);
+  g.closePath();
+  g.fill();
+  g.strokeStyle = 'rgba(232,224,255,0.62)';
+  g.lineWidth = 1.35;
+  g.stroke();
+  g.beginPath();
+  g.moveTo(C[2], C[3]);
+  g.lineTo(C[4], C[5]);
+  g.lineTo(C[12], C[13]);
+  g.lineTo(C[10], C[11]);
+  g.closePath();
+  g.moveTo(C[4], C[5]);
+  g.lineTo(C[6], C[7]);
+  g.lineTo(C[14], C[15]);
+  g.lineTo(C[12], C[13]);
+  g.closePath();
+  g.strokeStyle = 'rgba(214,204,255,0.35)';
+  g.stroke();
+  stations[s].labelX = labelX;
+}
+function makeGlow(r, g, b) {
+  var c = document.createElement('canvas');
+  c.width = 128;
+  c.height = 128;
+  var x = c.getContext('2d');
+  var rad = x.createRadialGradient(64, 64, 6, 64, 64, 62);
+  rad.addColorStop(0, 'rgba(' + r + ',' + g + ',' + b + ',0.95)');
+  rad.addColorStop(1, 'rgba(' + r + ',' + g + ',' + b + ',0)');
+  x.fillStyle = rad;
+  x.fillRect(0, 0, 128, 128);
+  return c;
+}
+function makeDocSprites() {
+  var colors = ['#8a8478', '#7c6bb5', '#2f9d6b', '#d4535e', '#8b5cf6'];
+  for (var v = 0; v < 5; v++) {
+    var c = document.createElement('canvas');
+    c.width = 180;
+    c.height = 220;
+    var g = c.getContext('2d');
+    g.translate(90, 128);
+    g.transform(1, 0.14, -0.32, 1, 0, 0);
+    g.fillStyle = 'rgba(0,0,0,0.28)';
+    g.beginPath();
+    g.ellipse(6, 42, 36, 12, 0, 0, 6.3);
+    g.fill();
+    roundRect(g, -40, -58, 80, 104, 8);
+    g.fillStyle = '#f4f0e6';
+    g.fill();
+    g.strokeStyle = 'rgba(40,32,24,0.25)';
+    g.lineWidth = 2;
+    g.stroke();
+    g.strokeStyle = 'rgba(70,62,52,0.45)';
+    g.lineWidth = 3;
+    g.beginPath();
+    for (var line = 0; line < 4; line++) {
+      g.moveTo(-24, -30 + line * 16);
+      g.lineTo(line === 3 ? 4 : 26, -30 + line * 16);
+    }
+    g.stroke();
+    g.fillStyle = colors[v];
+    roundRect(g, 16, -58, 24, 18, 4);
+    g.fill();
+    if (v === 3) {
+      g.fillStyle = '#d4535e';
+      g.beginPath();
+      g.arc(0, -70, 14, 0, 6.3);
+      g.fill();
+      g.fillStyle = '#fff';
+      g.fillRect(-2, -78, 4, 10);
+      g.fillRect(-2, -64, 4, 4);
+    }
+    docSprites[v] = c;
+  }
+}
+function roundRect(g, x, y, w, h, r) {
+  g.beginPath();
+  g.moveTo(x + r, y);
+  g.arcTo(x + w, y, x + w, y + h, r);
+  g.arcTo(x + w, y + h, x, y + h, r);
+  g.arcTo(x, y + h, x, y, r);
+  g.arcTo(x, y, x + w, y, r);
+  g.closePath();
+}
+
+function canSpawn() {
+  if (state.paused) return false;
+  var flowing = 0;
+  for (var i = 0; i < state.docs.length; i++) {
+    var d = state.docs[i];
+    if (d.dead || d.phase === 'hold' || d.phase === 'fade' || d.phase === 'skip') continue;
+    flowing++;
+    if (d.u < stationU[1]) return false;
+  }
+  return flowing < 2;
+}
+function beginSeg(doc) {
+  var seg = doc.seg;
+  var move = (seg & 1) === 0;
+  var base = move ? MOVE[seg >> 1] : PROC[seg >> 1];
+  doc.dur = base;
+  doc.left = base;
+  doc.times = true;
+  if (move) {
+    doc.u0 = seg === 0 ? 0 : stationU[(seg >> 1) - 1];
+    doc.u1 = stationU[seg >> 1];
+  } else {
+    doc.u0 = stationU[seg >> 1];
+    doc.u1 = doc.u0;
+    doc.u = doc.u0;
+  }
+  updateVisual(doc);
+  bumpScene();
+}
+function updateVisual(doc) {
+  if (doc.fixed) { doc.visual = 4; return; }
+  if (doc.kind === 'flag' && !doc.fixed) { doc.visual = 3; return; }
+  var st = doc.phase === 'hand' || doc.phase === 'fade' ? 3 : doc.seg >> 1;
+  doc.visual = st >= 2 ? 2 : st >= 1 ? 1 : 0;
+}
+function enterHold(doc) {
+  doc.phase = 'hold';
+  doc.speed = 1;
+  doc.times = false;
+  if (doc.wantsFlag) {
+    doc.holdStation = 1;
+    doc.kind = 'flag';
+    doc.visual = 3;
+    doc.u = stationU[1];
+    flagDoc = doc;
+    flagMsg.tone = 'bad';
+    flagMsg.title = 'Invoice #' + doc.num + ' flagged';
+    flagMsg.body = 'Vendor name unreadable. Held at AI processing.';
+    flagMsg.status = 'Waiting for a fix.';
+    flagMsg.showFix = true;
+    flagMsg.showApprove = false;
+    cardFlag.dirty = true;
+    pushFeed('bad', 'Invoice #' + doc.num + ' needs a fix', 'Vendor name unreadable. It is held at AI processing.');
+  } else {
+    doc.holdStation = 2;
+    doc.kind = 'review';
+    doc.visual = 1;
+    doc.u = stationU[2];
+    reviewDoc = doc;
+    reviewMsg.tone = 'warn';
+    reviewMsg.title = 'Invoice #' + doc.num + ' needs review';
+    reviewMsg.body = 'Total does not match the purchase order.';
+    reviewMsg.status = 'Needs a decision.';
+    reviewMsg.showApprove = true;
+    reviewMsg.showSkip = true;
+    reviewMsg.showReply = true;
+    reviewMsg.showFix = false;
+    reviewMsg.replyOpen = false;
+    cardReview.dirty = true;
+    pushFeed('warn', 'Invoice #' + doc.num + ' needs review', 'Total does not match the purchase order.');
+  }
+  bumpChips();
+  bumpScene();
+}
+function spawnAuto() {
+  var doc = takeDoc();
+  var num = nextNum++;
+  doc.dead = false;
+  doc.num = num;
+  doc.kind = 'auto';
+  doc.label = sender.carryLabel || ('#' + num);
+  doc.phase = 'run';
+  doc.seg = 0;
+  doc.shift = 0;
+  doc.speed = state.rushNext ? RUSH_SPEED : 1;
+  doc.visual = 0;
+  doc.elapsed = 0;
+  doc.counted = false;
+  doc.fixed = false;
+  doc.approved = false;
+  doc.note = '';
+  doc.noteShort = '';
+  doc.noteWidth = 0;
+  doc.wantsFlag = !!state.flagNext;
+  doc.wantsReview = !!state.reviewNext;
+  doc.times = true;
+  if (state.flagNext) {
+    state.flagNext = false;
+    doc.kind = 'flag';
+    armFlag(doc, false);
+  }
+  if (state.reviewNext) {
+    state.reviewNext = false;
+    doc.wantsReview = true;
+    armReview(doc, false);
+  }
+  beginSeg(doc);
+  state.docs.push(doc);
+  pushFeed('info', 'Invoice #' + num + ' received', 'Entered intake.');
+  bumpScene();
+  return doc;
+}
+function armFlag(doc, held) {
+  flagDoc = doc;
+  doc.wantsFlag = true;
+  doc.kind = 'flag';
+  doc.fixed = false;
+  flagMsg.tone = 'bad';
+  flagMsg.title = 'Invoice #' + doc.num + ' flagged';
+  flagMsg.body = held
+    ? 'Vendor name unreadable. Held at AI processing.'
+    : 'Vendor name unreadable. It will hold at AI processing.';
+  flagMsg.status = held ? 'Waiting for a fix.' : 'Moving to AI.';
+  flagMsg.showFix = !!held;
+  cardFlag.dirty = true;
+  bumpChips();
+}
+function armReview(doc, held) {
+  reviewDoc = doc;
+  doc.wantsReview = !held;
+  doc.kind = 'review';
+  doc.approved = false;
+  reviewMsg.tone = 'warn';
+  reviewMsg.title = 'Invoice #' + doc.num + ' needs review';
+  reviewMsg.body = held
+    ? 'Total does not match the purchase order.'
+    : 'It will stop at cloud validation for a decision.';
+  reviewMsg.status = held ? 'Needs a decision.' : 'Moving to cloud validation.';
+  reviewMsg.showApprove = !!held;
+  reviewMsg.showSkip = !!held;
+  reviewMsg.showReply = !!held;
+  reviewMsg.replyOpen = false;
+  cardReview.dirty = true;
+  bumpChips();
+}
+function advance(doc) {
+  if (doc.phase === 'run') {
+    if (doc.seg < 7) {
+      var next = doc.seg + 1;
+      if (next === 3 && doc.wantsFlag && !doc.fixed) { enterHold(doc); return; }
+      if (next === 5 && doc.wantsReview && !doc.approved) { enterHold(doc); return; }
+      doc.seg = next;
+      beginSeg(doc);
+      return;
+    }
+    doc.phase = 'hand';
+    doc.dur = HAND;
+    doc.left = HAND;
+    doc.u = stationU[3];
+    doc.times = true;
+    bumpScene();
+    return;
+  }
+  if (doc.phase === 'hand') {
+    finishDoc(doc);
+    doc.phase = 'fade';
+    doc.dur = 360;
+    doc.left = 360;
+    doc.times = false;
+    doc.speed = 1;
+    receiver.happy = 1.5;
+    bumpScene();
+    return;
+  }
+  if (doc.phase === 'rewind') {
+    doc.fixed = true;
+    doc.wantsFlag = false;
+    doc.visual = 4;
+    doc.phase = 'run';
+    doc.seg = 0;
+    doc.speed = state.rushNext ? RUSH_SPEED : 1;
+    flagMsg.title = 'Invoice #' + doc.num + ' on a clean pass';
+    flagMsg.status = 'Clean pass is on the line.';
+    cardFlag.dirty = true;
+    beginSeg(doc);
+    return;
+  }
+  if (doc.phase === 'fade' || doc.phase === 'skip') {
+    doc.dead = true;
+    if (doc === flagDoc) flagDoc = null;
+    if (doc === reviewDoc) reviewDoc = null;
+    bumpChips();
+    bumpScene();
+  }
+}
+function finishDoc(doc) {
+  if (doc.counted) return;
+  doc.counted = true;
+  state.docsProcessed += 1;
+  state.stepsRemoved += STEPS;
+  state.savedMin += MANUAL_MIN - doc.elapsed / 60000;
+  recentSum -= recent[recentIdx];
+  recent[recentIdx] = doc.elapsed;
+  recentSum += doc.elapsed;
+  recentIdx = (recentIdx + 1) % RING;
+  state.statsRev++;
+  var sec = fmtSec(doc.elapsed);
+  var title = 'Invoice #' + doc.num + ' delivered';
+  var body = 'Processed in ' + sec + '. ' + STEPS + ' manual steps removed.';
+  if (doc.fixed) {
+    title = 'Invoice #' + doc.num + ' fixed and delivered';
+    body = 'Reprocessed in ' + sec + '. ' + STEPS + ' manual steps removed.';
+    flagMsg.tone = 'good';
+    flagMsg.title = 'Invoice #' + doc.num + ' fixed and delivered';
+    flagMsg.status = 'Fixed and delivered in ' + sec + '.';
+    flagMsg.showFix = false;
+    cardFlag.dirty = true;
+  } else if (doc.approved) {
+    title = 'Invoice #' + doc.num + ' approved and delivered';
+    body = 'Full processing time ' + sec + ', including the stations already completed. ' + STEPS + ' manual steps removed.';
+    reviewMsg.tone = 'good';
+    reviewMsg.title = 'Invoice #' + doc.num + ' approved and delivered';
+    reviewMsg.status = 'Delivered in ' + sec + '.';
+    reviewMsg.showApprove = false;
+    reviewMsg.showSkip = false;
+    reviewMsg.showReply = false;
+    reviewMsg.replyOpen = false;
+    cardReview.dirty = true;
+  }
+  pushFeed('good', title, body);
+  bumpChips();
+}
+function consume(doc, stepDt, motion) {
+  var spd = doc.phase === 'fade' || doc.phase === 'skip' ? 1 : doc.speed;
+  var chunk = stepDt * 1000 * motion * spd;
+  if (chunk < 0) chunk = 0;
+  var used = chunk > doc.left ? doc.left : chunk;
+  doc.left -= used;
+  if (doc.times) doc.elapsed += used / spd;
+  if (doc.phase === 'run' || doc.phase === 'rewind') {
+    var p = smooth(1 - doc.left / doc.dur);
+    doc.u = doc.u0 + (doc.u1 - doc.u0) * p;
+  }
+  if (doc.left <= 0) advance(doc);
+}
+function updateActors(stepDt, motion, raw) {
+  var walking = sender.phase === 'toDrop' || sender.phase === 'toIdle';
+  if (walking) sender.step += stepDt * motion * 2.05;
+  else sender.step += (Math.round(sender.step) - sender.step) * Math.min(1, stepDt * 8);
+  sender.left -= stepDt * motion;
+  if (sender.phase === 'idle' && sender.left <= 0) {
+    if (!beginWalk()) sender.left = 0.35;
+  } else if (sender.phase === 'toDrop' && sender.left <= 0) {
+    sender.phase = 'place';
+    sender.dur = 0.42;
+    sender.left = 0.42;
+    bumpScene();
+  } else if (sender.phase === 'place' && sender.left <= 0) {
+    spawnAuto();
+    sender.phase = 'toIdle';
+    sender.dur = 1.45;
+    sender.left = 1.45;
+    bumpScene();
+  } else if (sender.phase === 'toIdle' && sender.left <= 0) {
+    sender.phase = 'idle';
+    sender.dur = 0.45;
+    sender.left = 0.45;
+    bumpScene();
+  }
+  blink(sender, raw);
+  blink(receiver, raw);
+  if (receiver.happy > 0) receiver.happy -= raw * (state.reduced ? 0.35 : 1);
+  var reachTarget = 0;
+  for (var i = 0; i < state.docs.length; i++) {
+    var d = state.docs[i];
+    if (d.dead) continue;
+    if (d.phase === 'hand' || d.phase === 'fade' || (d.phase === 'run' && d.seg >= 6)) reachTarget = 1;
+  }
+  var prev = receiver.reach || 0;
+  var next = prev + (reachTarget - prev) * Math.min(1, (state.paused ? 0 : raw) * 6);
+  receiver.reach = next;
+  if (reachTarget && !walking) {
+    receiver.step += stepDt * motion * 1.2;
+  }
+}
+function beginWalk() {
+  if (!canSpawn()) return false;
+  sender.carryNum = nextNum;
+  sender.carryLabel = '#' + nextNum;
+  sender.phase = 'toDrop';
+  sender.dur = 1.7;
+  sender.left = 1.7;
+  bumpScene();
+  return true;
+}
+function blink(ch, raw) {
+  var rate = state.reduced ? 0.35 : 1;
+  if (ch.blink < 0) {
+    ch.eye = 1;
+    ch.wait -= raw * rate;
+    if (ch.wait <= 0) ch.blink = 0;
+  } else {
+    ch.blink += raw * rate;
+    if (ch.blink >= 0.13) {
+      ch.blink = -1;
+      ch.eye = 1;
+      ch.wait = state.reduced ? 5 + rnd() * 3 : 2.1 + rnd() * 3.4;
+    } else {
+      var p = ch.blink / 0.13;
+      ch.eye = p < 0.5 ? 1 - p * 2 : (p - 0.5) * 2;
+    }
+  }
+}
+function update(now) {
+  var raw = lastNow ? (now - lastNow) / 1000 : 0.016;
+  lastNow = now;
+  if (raw > 0.05) raw = 0.05;
+  if (raw < 0) raw = 0;
+  var motion = state.reduced ? 0.42 : 1;
+  var stepDt = state.paused ? 0 : raw;
+  if (state.rushNext) {
+    state.rushLeft -= stepDt;
+    if (state.rushLeft <= 0) {
+      state.rushNext = false;
+      state.rushLeft = 0;
+      pushFeed('info', 'Rush ended', 'The next invoice runs at the normal pace. Documents already rushed stay fast.');
+      bumpMode();
+      bumpScene();
+    }
+  }
+  if (!state.reduced) visT += stepDt;
+  updateActors(stepDt, motion, raw);
+  for (var i = 0; i < state.docs.length; i++) {
+    var d = state.docs[i];
+    if (d.dead || d.phase === 'hold') continue;
+    consume(d, stepDt, motion);
+  }
+  var w = 0;
+  var removed = false;
+  for (var j = 0; j < state.docs.length; j++) {
+    var doc = state.docs[j];
+    if (doc.dead) {
+      pool.push(doc);
+      removed = true;
+    } else state.docs[w++] = doc;
+  }
+  if (w !== state.docs.length) state.docs.length = w;
+  if (removed) bumpScene();
+  stepSmooth = state.paused ? 0 : Math.min(1, raw * 8);
+  var lightDt = state.paused ? 0 : raw;
+  for (var s = 0; s < 4; s++) {
+    stations[s].want = 0;
+    stations[s].wantMode = 0;
+  }
+  for (var k = 0; k < state.docs.length; k++) affect(state.docs[k]);
+  for (var n = 0; n < 4; n++) {
+    var st = stations[n];
+    st.heat += (st.want - st.heat) * Math.min(1, lightDt * 7);
+    if (st.want > 0.2) st.mode = st.wantMode;
+  }
+  if (!state.paused && !state.reduced) dashPhase += stepDt * 14;
+}
+function affect(doc) {
+  if (doc.dead) return;
+  var idx = 0;
+  var amount = 0.4;
+  var mode = 0;
+  if (doc.phase === 'hold') {
+    idx = doc.holdStation;
+    amount = 1;
+    mode = doc.kind === 'flag' ? 2 : 1;
+  } else if (doc.phase === 'rewind') {
+    idx = 0;
+    amount = 0.85;
+    mode = 0;
+  } else if (doc.phase === 'hand' || doc.phase === 'fade') {
+    idx = 3;
+    amount = 1;
+    mode = doc.fixed ? 0 : 3;
+  } else if (doc.phase === 'skip') {
+    idx = doc.holdStation || (doc.seg >> 1);
+    amount = 0.35;
+    mode = 1;
+  } else {
+    idx = doc.seg >> 1;
+    if (idx > 3) idx = 3;
+    amount = (doc.seg & 1) === 1 ? 1 : 0.55;
+    if (doc.visual === 3) mode = 2;
+    else if (doc.visual === 2 || doc.visual === 4) mode = 3;
+    else mode = 0;
+  }
+  var st = stations[idx];
+  if (amount > st.want) st.want = amount;
+  if (mode > st.wantMode) st.wantMode = mode;
+}
+
+function actorFoot(phase, left, dur, idleX, idleY, dropX, dropY) {
+  var p = 0;
+  if (phase === 'toDrop') p = smooth(1 - left / dur);
+  else if (phase === 'place') p = 1;
+  else if (phase === 'toIdle') p = 1 - smooth(1 - left / dur);
+  scr.x = idleX + (dropX - idleX) * p;
+  scr.y = idleY + (dropY - idleY) * p;
+}
+function docPosition(doc) {
+  var shTarget = doc.phase === 'hold' ? 1 : 0;
+  doc.shift += (shTarget - doc.shift) * stepSmooth;
+  if (doc.phase === 'hand' || doc.phase === 'fade') {
+    pathPoint(stationU[3]);
+    var ax = scr.x;
+    var ay = scr.y;
+    var reach = receiver.reach || 0;
+    var rx = recvIdleX + (recvTakeX - recvIdleX) * reach;
+    var ry = recvIdleY + (recvTakeY - recvIdleY) * reach;
+    personHand(rx, ry, -1, Math.max(reach, 0.65), 0, unit / 46, 0);
+    var t = doc.phase === 'fade' ? 1 : smooth(1 - doc.left / doc.dur);
+    scr.x = ax + (handX - ax) * t;
+    scr.y = ay + (handY - ay) * t;
+    return;
+  }
+  pathPoint(doc.u);
+  var si = doc.phase === 'hold' ? doc.holdStation : (doc.seg >> 1);
+  if (si < 0) si = 0;
+  if (si > 3) si = 3;
+  scr.x += pocketX[si] * doc.shift;
+  scr.y += pocketY[si] * doc.shift;
+  if (doc.phase === 'hold' && !state.reduced) scr.y += Math.sin(visT * 2.4 + doc.num) * 3;
+  if (doc.phase === 'skip') {
+    var k = 1 - doc.left / doc.dur;
+    scr.y += k * unit * 0.8;
+  }
+}
+function personHand(x, y, face, reach, carry, scale, bob) {
+  var hx = 12 + reach * 12 + carry * 10;
+  var hy = -34 + bob + reach * 14;
+  handX = x + hx * scale * face;
+  handY = y + hy * scale;
+}
+function draw() {
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = '#07070a';
+  ctx.fillRect(0, 0, cssW, cssH);
+  if (floorCache) ctx.drawImage(floorCache, 0, 0, cssW, cssH);
+  drawDashes();
+  drawStationsLive();
+  drawEntities();
+}
+function drawDashes() {
+  ctx.strokeStyle = 'rgba(214,204,255,0.75)';
+  ctx.lineWidth = Math.max(1.4, unit * 0.035);
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  var shift = dashPhase % 8;
+  for (var i = shift; i < PATH_N - 1; i += 8) {
+    var j = (i | 0) * 2;
+    ctx.moveTo(PATH[j], PATH[j + 1]);
+    ctx.lineTo(PATH[j + 2], PATH[j + 3]);
+  }
+  ctx.stroke();
+}
+function drawStationsLive() {
+  var names = tall ? ST_TALL : ST_WIDE;
+  for (var s = 0; s < 4; s++) {
+    var st = stations[s];
+    if (st.heat > 0.03) {
+      var sprite = glowSprites[st.mode] || glowV;
+      var size = unit * (2.4 + st.heat);
+      ctx.globalAlpha = 0.28 + st.heat * 0.45;
+      ctx.drawImage(sprite, st.sx - size / 2, st.sy - size / 2, size, size);
+      ctx.globalAlpha = 0.18 + st.heat * 0.28;
+      ctx.fillStyle = glowColors[st.mode];
+      ctx.beginPath();
+      ctx.moveTo(TOP[s * 8], TOP[s * 8 + 1]);
+      ctx.lineTo(TOP[s * 8 + 2], TOP[s * 8 + 3]);
+      ctx.lineTo(TOP[s * 8 + 4], TOP[s * 8 + 5]);
+      ctx.lineTo(TOP[s * 8 + 6], TOP[s * 8 + 7]);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    drawInterior(s, st.heat);
+    if (!state.reduced) {
+      var sheen = Math.sin(visT * 1.4 + s) * unit * 0.12;
+      ctx.globalAlpha = 0.18;
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.ellipse(st.sx + sheen, st.sy - unit * 0.08, unit * 0.18, unit * 0.07, -0.5, 0, 6.3);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+  }
+  ctx.font = fontLabel;
+  ctx.textAlign = tall ? 'left' : 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#ddd6fe';
+  for (var n = 0; n < 4; n++) ctx.fillText(names[n], stations[n].lx, stations[n].ly);
+}
+function drawInterior(s, heat) {
+  var x = stations[s].sx;
+  var y = stations[s].sy;
+  var k = unit * 0.16;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.globalAlpha = 0.4 + heat * 0.6;
+  ctx.strokeStyle = heat > 0.55 ? '#ffffff' : '#d6ccff';
+  ctx.fillStyle = heat > 0.55 ? '#ffffff' : '#d6ccff';
+  ctx.lineWidth = Math.max(1, unit * 0.03);
+  ctx.lineCap = 'round';
+  if (s === 0) {
+    var p = state.reduced ? 0.45 : (visT * 0.8) % 1;
+    ctx.beginPath();
+    ctx.moveTo(-k, -k + p * k * 2);
+    ctx.lineTo(k, -k + p * k * 2);
+    ctx.stroke();
+  } else if (s === 1) {
+    var pulse = state.reduced ? 1 : 0.65 + Math.sin(visT * 3) * 0.35;
+    ctx.globalAlpha *= pulse;
+    ctx.beginPath();
+    ctx.moveTo(-k, 0);
+    ctx.lineTo(0, -k * 0.6);
+    ctx.lineTo(k, 0);
+    ctx.moveTo(0, -k * 0.6);
+    ctx.lineTo(0, k * 0.7);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(-k, 0, 2.2, 0, 6.3);
+    ctx.arc(0, -k * 0.6, 2.2, 0, 6.3);
+    ctx.arc(k, 0, 2.2, 0, 6.3);
+    ctx.fill();
+  } else if (s === 2) {
+    ctx.beginPath();
+    ctx.arc(0, 2, k * 0.55, Math.PI, 0);
+    ctx.arc(-k * 0.45, 2, k * 0.38, Math.PI, 0);
+    ctx.arc(k * 0.48, 4, k * 0.36, Math.PI, 0);
+    ctx.stroke();
+  } else {
+    ctx.beginPath();
+    ctx.moveTo(-k * 0.45, 0);
+    ctx.lineTo(-k * 0.05, k * 0.4);
+    ctx.lineTo(k * 0.55, -k * 0.45);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawEntities() {
+  var n = 0;
+  actorFoot(sender.phase, sender.left, sender.dur, senderIdleX, senderIdleY, senderDropX, senderDropY);
+  EX[n] = scr.x; EY[n] = scr.y; ETYPE[n] = 0; n++;
+  var reach = receiver.reach || 0;
+  EX[n] = recvIdleX + (recvTakeX - recvIdleX) * reach;
+  EY[n] = recvIdleY + (recvTakeY - recvIdleY) * reach;
+  ETYPE[n] = 1;
+  n++;
+  for (var i = 0; i < state.docs.length; i++) {
+    var d = state.docs[i];
+    if (d.dead) continue;
+    docPosition(d);
+    EX[n] = scr.x;
+    EY[n] = scr.y;
+    ETYPE[n] = 2;
+    EID[n] = i;
+    n++;
+  }
+  for (var a = 0; a < n; a++) order[a] = a;
+  for (var p = 1; p < n; p++) {
+    var key = order[p];
+    var q = p - 1;
+    while (q >= 0 && EY[order[q]] > EY[key]) {
+      order[q + 1] = order[q];
+      q--;
+    }
+    order[q + 1] = key;
+  }
+  hitN = 0;
+  var scale = unit / 46;
+  for (var e = 0; e < n; e++) {
+    var id = order[e];
+    if (ETYPE[id] === 0) drawSender(EX[id], EY[id], scale);
+    else if (ETYPE[id] === 1) drawReceiver(EX[id], EY[id], scale);
+    else drawDoc(state.docs[EID[id]], EX[id], EY[id]);
+  }
+  ctx.font = fontSmall;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  drawTag(EX[0], EY[0]);
+  drawTag(EX[1], EY[1]);
+}
+function drawTag(x, y) {
+  var top = y + Math.max(6, unit * 0.1);
+  ctx.fillStyle = 'rgba(8, 8, 12, 0.82)';
+  roundRect(ctx, x - 18, top, 36, 16, 8);
+  ctx.fill();
+  ctx.fillStyle = '#ddd6fe';
+  ctx.fillText('You', x, top + 8);
+}
+function drawSender(x, y, scale) {
+  var carry = sender.phase === 'toDrop' ? 1 : sender.phase === 'place' ? sender.left / sender.dur : 0;
+  var reach = sender.phase === 'place' ? 1 - sender.left / sender.dur : 0;
+  var face = sender.phase === 'toIdle' ? -1 : 1;
+  var walking = sender.phase === 'toDrop' || sender.phase === 'toIdle' ? 1 : 0;
+  drawPerson(x, y, scale, face, sender, carry, reach, walking);
+  if (carry > 0.04) {
+    drawPaper(handX + unit * 0.18, handY + unit * 0.16, unit * 0.5, 0, carry, sender.carryLabel, '');
+  }
+}
+function drawReceiver(x, y, scale) {
+  var reach = receiver.reach || 0;
+  drawPerson(x, y, scale, -1, receiver, 0, reach, reach);
+}
+function drawPerson(x, y, scale, face, ch, carry, reach, walking) {
+  var breath = state.reduced ? 0 : Math.sin(visT * 1.7 + (face > 0 ? 0 : 1.3)) * (1 - Math.min(1, walking)) * 1.15;
+  var bob = breath + (walking > 0.2 ? Math.abs(Math.sin(ch.step * 6.283185)) * -2.5 : 0);
+  var lean = state.reduced ? 0 : Math.sin(visT * 0.9 + ch.step) * (walking > 0.2 ? 0.4 : 1.3);
+  personHand(x + lean, y, face, reach, carry, scale, bob);
+  ctx.save();
+  ctx.translate(x + lean, y);
+  ctx.scale(scale * face, scale);
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 16, 6, 0, 0, 6.283185);
+  ctx.fill();
+  var swing = Math.sin(ch.step * 6.283185) * (0.25 + Math.min(1, walking) * 0.75);
+  ctx.strokeStyle = '#6d6484';
+  ctx.lineWidth = 4.2;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(-4, -24 + bob);
+  ctx.lineTo(-3.5 + swing * 5, -1);
+  ctx.moveTo(3.5, -24 + bob);
+  ctx.lineTo(3.5 - swing * 5, -1);
+  ctx.stroke();
+  roundRect(ctx, -11, -46 + bob, 22, 24, 7);
+  ctx.fillStyle = '#1b1726';
+  ctx.fill();
+  ctx.fillStyle = '#8B5CF6';
+  roundRect(ctx, -11, -46 + bob, 22, 5.5, 3);
+  ctx.fill();
+  var hy = -40 + bob;
+  var hx = 12 + reach * 12 + carry * 10;
+  var hand = -34 + bob + reach * 14;
+  ctx.strokeStyle = '#1b1726';
+  ctx.lineWidth = 3.6;
+  ctx.beginPath();
+  ctx.moveTo(-8, hy);
+  ctx.lineTo(-14 - swing * 6, -22 + bob);
+  ctx.moveTo(8, hy);
+  ctx.lineTo(hx, hand);
+  ctx.stroke();
+  ctx.fillStyle = '#f0c9a0';
+  ctx.beginPath();
+  ctx.arc(hx, hand, 2.4, 0, 6.283185);
+  ctx.fill();
+  var headY = -58 + bob;
+  ctx.fillStyle = '#241833';
+  ctx.beginPath();
+  ctx.arc(0, headY - 1, 10.6, 0, 6.283185);
+  ctx.fill();
+  ctx.fillStyle = '#f0c9a0';
+  ctx.beginPath();
+  ctx.arc(0, headY + 2.4, 8.4, 0, 6.283185);
+  ctx.fill();
+  if (ch.eye < 0.22) {
+    ctx.strokeStyle = '#3a241c';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(-5.2, headY + 1.5);
+    ctx.lineTo(-2.1, headY + 1.5);
+    ctx.moveTo(2.1, headY + 1.5);
+    ctx.lineTo(5.2, headY + 1.5);
+    ctx.stroke();
+  } else {
+    ctx.fillStyle = '#2a1a16';
+    ctx.beginPath();
+    ctx.ellipse(-3.5, headY + 1.4, 1.25, 1.65 * ch.eye, 0, 0, 6.283185);
+    ctx.ellipse(3.5, headY + 1.4, 1.25, 1.65 * ch.eye, 0, 0, 6.283185);
+    ctx.fill();
+  }
+  if (ch.happy > 0.08) {
+    ctx.strokeStyle = '#8d5b48';
+    ctx.lineWidth = 1.15;
+    ctx.beginPath();
+    ctx.arc(0, headY + 4.2, 3, 0.15, 3);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawDoc(doc, x, y) {
+  var alpha = 1;
+  if (doc.phase === 'fade' || doc.phase === 'skip') alpha = Math.max(0, doc.left / doc.dur);
+  noteWidthCache = doc.noteWidth;
+  drawPaper(x, y, unit * 0.9, doc.visual, alpha, doc.label, doc.noteShort);
+  if (hitN < 10) {
+    var dw = unit * 0.9;
+    HX[hitN] = x - dw * 0.45;
+    HY[hitN] = y - dw * 1.15;
+    HW[hitN] = dw * 0.95;
+    HH[hitN] = dw * 1.25;
+    HID[hitN] = doc.num;
+    hitN++;
+  }
+}
+var noteWidthCache = 0;
+function drawPaper(x, y, dw, visual, alpha, label, note) {
+  var sprite = docSprites[visual] || docSprites[0];
+  var dh = dw * (220 / 180);
+  ctx.globalAlpha = alpha;
+  ctx.drawImage(sprite, x - dw * 0.5, y - dh * 0.86, dw, dh);
+  ctx.font = fontSmall;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#2c261f';
+  ctx.fillText(label, x - dw * 0.02, y - dh * 0.42);
+  if (note) {
+    ctx.font = fontSmall;
+    var tw = noteWidthCache;
+    var w = Math.min(dw * 1.6, tw + 16);
+    ctx.fillStyle = 'rgba(20,16,32,0.92)';
+    roundRect(ctx, x - w / 2, y - dh * 0.98, w, 18, 8);
+    ctx.fill();
+    ctx.fillStyle = '#efeaff';
+    ctx.fillText(note, x, y - dh * 0.98 + 9);
+  }
+  ctx.globalAlpha = 1;
+}
+function hitAt(x, y) {
+  for (var i = hitN - 1; i >= 0; i--) {
+    if (x >= HX[i] && x <= HX[i] + HW[i] && y >= HY[i] && y <= HY[i] + HH[i]) return HID[i];
+  }
+  return -1;
+}
+function findDoc(num) {
+  for (var i = 0; i < state.docs.length; i++) {
+    if (!state.docs[i].dead && state.docs[i].num === num) return state.docs[i];
+  }
+  return null;
+}
+
+function onChip(name) {
+  if (name === 'rush') onRush();
+  else if (name === 'hold') onHoldChip();
+  else if (name === 'fix') onFixChip();
+  else if (name === 'pause') onPause();
+}
+function onRush() {
+  var ids = [];
+  for (var i = 0; i < state.docs.length; i++) {
+    var d = state.docs[i];
+    if (d.dead || d.phase === 'hold' || d.phase === 'skip' || d.phase === 'fade') continue;
+    d.speed = RUSH_SPEED;
+    ids.push(d.label);
+  }
+  state.rushNext = true;
+  state.rushLeft = 12;
+  if (ids.length === 0) pushFeed('info', 'The next invoice will be rushed', 'Intake will take it at ' + RUSH_SPEED + '× until the burst ends.');
+  else if (ids.length === 1) pushFeed('info', 'Rushing invoice ' + ids[0], 'That document is moving at ' + RUSH_SPEED + '×.');
+  else pushFeed('info', 'Rushing ' + ids.join(' and '), 'Those documents are moving at ' + RUSH_SPEED + '×.');
+  bumpMode();
+  bumpScene();
+  bumpChips();
+}
+function onPause() {
+  state.paused = !state.paused;
+  if (state.paused) pushFeed('warn', 'Line paused', 'Documents hold their place until you resume.');
+  else pushFeed('info', 'Line resumed', 'The pipeline is moving again.');
+  bumpMode();
+  bumpScene();
+  bumpChips();
+}
+function onHoldChip() {
+  if (reviewDoc && !reviewDoc.dead) {
+    flashCard(cardReview);
+    pushFeed('info', 'Invoice #' + reviewDoc.num + ' is the open review', reviewDoc.phase === 'hold'
+      ? 'It is waiting at cloud validation.'
+      : 'It is ' + placeName(reviewDoc) + '.');
+    stations[2].heat = 1;
+    return;
+  }
+  var target = null;
+  for (var i = 0; i < state.docs.length; i++) {
+    var d = state.docs[i];
+    if (d.dead || d.kind === 'flag' || d.approved) continue;
+    if (d.phase === 'run' && d.seg < 5) { target = d; break; }
+  }
+  if (target) {
+    target.wantsReview = true;
+    armReview(target, false);
+    pushFeed('warn', 'Invoice #' + target.num + ' will stop for review', 'Cloud validation will hold it.');
+    bumpScene();
+    return;
+  }
+  state.reviewNext = true;
+  bumpChips();
+  pushFeed('warn', 'The next invoice will stop for review', 'It holds at cloud validation.');
+}
+function onFixChip() {
+  if (flagDoc && !flagDoc.dead) {
+    if (flagDoc.phase === 'hold' && !flagDoc.fixed) { startFix(flagDoc); return; }
+    flashCard(cardFlag);
+    pushFeed('info', 'Invoice #' + flagDoc.num + ' is already moving', 'It is ' + placeName(flagDoc) + '.');
+    return;
+  }
+  var target = null;
+  for (var i = 0; i < state.docs.length; i++) {
+    var d = state.docs[i];
+    if (d.dead || d === reviewDoc) continue;
+    if (d.phase === 'run' && d.seg < 3 && !d.fixed) { target = d; break; }
+  }
+  if (target) {
+    armFlag(target, false);
+    pushFeed('bad', 'Invoice #' + target.num + ' will be flagged', 'AI processing will hold it.');
+    bumpScene();
+    return;
+  }
+  state.flagNext = true;
+  bumpChips();
+  pushFeed('bad', 'The next invoice will be flagged', 'AI processing will hold it for a fix.');
+}
+function startFix(doc) {
+  doc.phase = 'rewind';
+  doc.fixed = false;
+  doc.dur = REWIND;
+  doc.left = REWIND;
+  doc.u0 = doc.u;
+  doc.u1 = 0;
+  doc.speed = state.rushNext ? RUSH_SPEED : 1;
+  doc.times = true;
+  doc.elapsed = 0;
+  doc.shift = doc.shift || 0;
+  flagMsg.tone = 'info';
+  flagMsg.title = 'Invoice #' + doc.num + ' reprocessing';
+  flagMsg.status = 'Reprocessing from intake.';
+  flagMsg.showFix = false;
+  cardFlag.dirty = true;
+  pushFeed('info', 'Invoice #' + doc.num + ' is being fixed', 'It returns to intake, then runs the line again.');
+  receiver.happy = 0;
+  bumpChips();
+  bumpScene();
+}
+function onAct(pin, act) {
+  if (pin === 'flag' && act === 'fix') {
+    if (flagDoc && flagDoc.phase === 'hold' && !flagDoc.fixed) startFix(flagDoc);
+    return;
+  }
+  if (pin !== 'review' || !reviewDoc || reviewDoc.dead) return;
+  if (act === 'approve') onApprove();
+  else if (act === 'skip') onSkip();
+  else if (act === 'reply') onReplyOpen();
+}
+function onApprove() {
+  if (reviewDoc.phase !== 'hold') return;
+  reviewDoc.approved = true;
+  reviewDoc.wantsReview = false;
+  reviewDoc.kind = 'review';
+  reviewDoc.phase = 'run';
+  reviewDoc.seg = 5;
+  reviewDoc.speed = state.rushNext ? RUSH_SPEED : 1;
+  reviewDoc.visual = 2;
+  beginSeg(reviewDoc);
+  reviewMsg.tone = 'good';
+  reviewMsg.title = 'Invoice #' + reviewDoc.num + ' approved';
+  reviewMsg.status = 'Approved. Sending through the remaining stations.';
+  reviewMsg.showApprove = false;
+  reviewMsg.showSkip = false;
+  reviewMsg.showReply = false;
+  reviewMsg.replyOpen = false;
+  cardReview.dirty = true;
+  pushFeed('good', 'Invoice #' + reviewDoc.num + ' approved', 'Cloud validation is finishing the pass.');
+  bumpChips();
+}
+function onSkip() {
+  if (reviewDoc.phase !== 'hold') return;
+  var num = reviewDoc.num;
+  reviewDoc.phase = 'skip';
+  reviewDoc.dur = 520;
+  reviewDoc.left = 520;
+  reviewDoc.times = false;
+  reviewDoc.holdStation = 2;
+  reviewMsg.tone = 'info';
+  reviewMsg.title = 'Invoice #' + num + ' skipped';
+  reviewMsg.status = 'Skipped. Not counted as delivered.';
+  reviewMsg.showApprove = false;
+  reviewMsg.showSkip = false;
+  reviewMsg.showReply = false;
+  reviewMsg.replyOpen = false;
+  cardReview.dirty = true;
+  pushFeed('info', 'Invoice #' + num + ' skipped', 'It left the line and was not counted as delivered.');
+  bumpChips();
+  bumpScene();
+}
+function onReplyOpen() {
+  if (reviewDoc.phase !== 'hold') return;
+  reviewMsg.replyOpen = true;
+  reviewMsg.focusReply = true;
+  cardReview.dirty = true;
+}
+function onReply(text) {
+  if (!reviewDoc || reviewDoc.phase !== 'hold') return;
+  var trimmed = text.trim();
+  if (!trimmed) return;
+  reviewDoc.note = trimmed;
+  reviewDoc.noteShort = trimmed.length > 32 ? trimmed.slice(0, 31) + '…' : trimmed;
+  ctx.font = fontSmall;
+  reviewDoc.noteWidth = ctx.measureText(reviewDoc.noteShort).width;
+  reviewMsg.replyOpen = false;
+  reviewMsg.status = 'Note attached. Still waiting for approve or skip.';
+  cardReview.dirty = true;
+  pushFeed('info', 'You replied on invoice #' + reviewDoc.num, trimmed, true);
+  pushFeed('info', 'Note attached to invoice #' + reviewDoc.num, 'It stays in review until you approve or skip.');
+  bumpScene();
+}
+
+function frame(now) {
+  var t0 = performance.now();
+  frameIndex++;
+  if (viewDirty || frameIndex % 90 === 0) {
+    var rw = wrap.clientWidth;
+    var rh = wrap.clientHeight;
+    var rd = Math.min(2, window.devicePixelRatio || 1);
+    if (viewDirty || rw !== cssW || rh !== cssH || rd !== dpr) layout();
+  }
+  update(now);
+  if (cssW > 2 && cssH > 2) draw();
+  syncDom(now);
+  var elapsed = performance.now() - t0;
+  if (frameIndex > 20 && !builtCache) {
+    /* cache flag is cleared below only on the layout frame */
+  }
+  if (frameIndex > 25 && !layoutThisFrame) {
+    if (workCount < workRing.length) {
+      workRing[workCount] = elapsed;
+      workSum += elapsed;
+      workCount++;
+    } else {
+      workSum -= workRing[workIdx];
+      workRing[workIdx] = elapsed;
+      workSum += elapsed;
+      workIdx = (workIdx + 1) % workRing.length;
+    }
+    workAvg = workSum / workCount;
+  }
+  layoutThisFrame = false;
+  var gap = lastGap ? (now - lastGap) / 1000 : 0;
+  lastGap = now;
+  if (frameIndex > 25 && gap > 0 && gap < 0.2) {
+    fpsAcc += gap;
+    fpsN++;
+    if (fpsAcc >= 0.4 && fpsN > 4) {
+      fpsShown = fpsN / fpsAcc;
+      fpsAcc = 0;
+      fpsN = 0;
+    }
+  }
+  api.workMs = workAvg;
+  api.fps = fpsShown;
+  api.samples = workCount;
+  requestAnimationFrame(frame);
+}
+var layoutThisFrame = false;
+var lastGap = 0;
+var layoutOrig = layout;
+layout = function () {
+  layoutThisFrame = true;
+  layoutOrig();
+};
+
+var api = {
+  state: state,
+  NOM: NOM,
+  STEPS: STEPS,
+  MANUAL_MIN: MANUAL_MIN,
+  RING: RING,
+  workMs: 0,
+  fps: 0,
+  samples: 0,
+  snapshot: function () {
+    buildLine();
+    return {
+      docs: state.docsProcessed,
+      avgMs: recentSum / RING,
+      savedMin: state.savedMin,
+      steps: state.stepsRemoved,
+      live: liveN,
+      line: lineText,
+      paused: state.paused,
+      reduced: state.reduced,
+      rush: state.rushNext,
+      messages: state.messages.length,
+      workMs: workAvg,
+      fps: fpsShown,
+      flag: flagDoc ? flagDoc.num : 0,
+      review: reviewDoc ? reviewDoc.num : 0,
+      flagPhase: flagDoc ? flagDoc.phase : '',
+      reviewPhase: reviewDoc ? reviewDoc.phase : ''
+    };
+  }
+};
+window.__HACODE_CC = api;
+
+var logo = document.querySelector('.brand img');
+logo.addEventListener('error', function () { logo.hidden = true; });
+var motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+function applyMotion() {
+  state.reduced = !!motionQuery.matches;
+  bumpMode();
+  bumpScene();
+}
+if (motionQuery.addEventListener) motionQuery.addEventListener('change', applyMotion);
+else if (motionQuery.addListener) motionQuery.addListener(applyMotion);
+state.reduced = !!motionQuery.matches;
+
+document.addEventListener('pointerover', function (e) {
+  overInteractive = e.target.closest ? e.target.closest('button, input, textarea') : null;
+});
+document.addEventListener('pointerout', function (e) {
+  var t = e.target.closest ? e.target.closest('button, input, textarea') : null;
+  if (t && overInteractive === t) overInteractive = null;
+});
+document.addEventListener('pointerdown', function (e) {
+  pressedEl = e.target.closest ? e.target.closest('button, input, textarea') : null;
+});
+document.addEventListener('pointerup', function () { pressedEl = null; });
+document.addEventListener('pointercancel', function () { pressedEl = null; });
+document.body.addEventListener('click', function (e) {
+  var chip = e.target.closest ? e.target.closest('[data-chip]') : null;
+  if (chip) { onChip(chip.getAttribute('data-chip')); return; }
+  var act = e.target.closest ? e.target.closest('[data-act]') : null;
+  if (!act) return;
+  var pin = act.closest('[data-pin]');
+  if (!pin) return;
+  onAct(pin.getAttribute('data-pin'), act.getAttribute('data-act'));
+});
+els.pins.addEventListener('submit', function (e) {
+  e.preventDefault();
+  var input = e.target.querySelector ? e.target.querySelector('input') : null;
+  if (!input) return;
+  onReply(input.value);
+  input.value = '';
+});
+canvas.addEventListener('pointermove', function (e) {
+  var on = hitAt(e.offsetX, e.offsetY) >= 0;
+  if (on !== cursorOn) {
+    cursorOn = on;
+    canvas.style.cursor = on ? 'pointer' : 'default';
+  }
+});
+canvas.addEventListener('click', function (e) {
+  var num = hitAt(e.offsetX, e.offsetY);
+  if (num < 0) return;
+  var doc = findDoc(num);
+  if (!doc) return;
+  if (doc === reviewDoc || doc.kind === 'review') flashCard(cardReview);
+  else if (doc === flagDoc || doc.kind === 'flag') flashCard(cardFlag);
+  else pushFeed('info', 'Following invoice #' + doc.num, 'It is ' + placeName(doc) + '.');
+  stations[doc.phase === 'hold' ? doc.holdStation : Math.min(3, doc.seg >> 1)].heat = 1;
+});
+new ResizeObserver(function () { viewDirty = true; }).observe(wrap);
+
+els.note.textContent = 'Each delivery replaces ' + STEPS + ' manual steps and ' + MANUAL_MIN + ' minutes of staff time. Average is the last ' + RING + ' outcomes.';
+els.avgHint.textContent = 'last ' + RING;
+pushFeed('info', 'Pipeline online', 'Intake, AI processing, cloud validation, delivery. No software handoff.');
+pushFeed('info', 'Invoice #' + reviewDoc.num + ' received', 'Waiting at cloud validation.');
+pushFeed('bad', 'Invoice #' + flagDoc.num + ' flagged', 'Vendor name unreadable at AI processing.');
+renderStats();
+syncCard(cardFlag);
+syncCard(cardReview);
+syncChips();
+buildLine();
+buildCaption();
+setText(els.line, lineText);
+setText(els.caption, captionText);
+canvas.setAttribute('aria-label', captionText);
+setText(els.mode, modeLabel());
+els.dot.className = 'dot ' + modeKey();
+document.body.classList.toggle('reduced', state.reduced);
+composeMeter();
+statsSeen = state.statsRev;
+chipSeen = state.chipRev;
+sceneSeen = state.sceneRev;
+modeSeen = state.modeRev;
+
+glowV = makeGlow(139, 92, 246);
+glowA = makeGlow(245, 193, 108);
+glowR = makeGlow(240, 113, 120);
+glowG = makeGlow(125, 220, 176);
+glowSprites = [glowV, glowA, glowR, glowG];
+makeDocSprites();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
