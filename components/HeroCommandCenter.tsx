@@ -4,13 +4,16 @@ import { useEffect, useRef } from "react";
 
 /**
  * Hero portrait of the command-center pipeline.
- * Canvas only: two people, one document, four glass stations.
+ * Canvas only: documents and four glass stations.
+ * A document materializes at intake, rides the belt, and fades into the tray.
  * The loop is automatic. There are no controls, counts, or panels.
  */
 
 const MOVE = new Float32Array([700, 1000, 1000, 900]);
 const PROC = new Float32Array([900, 1100, 1000, 900]);
-const HAND = 650;
+const ARRIVE = 560;
+const DELIVER = 760;
+const FADE = 440;
 const COS = Math.cos(Math.PI / 6);
 const SIN = Math.sin(Math.PI / 6);
 const PATH_N = 96;
@@ -21,21 +24,9 @@ const GLOW_COLORS = ["#8B5CF6", "#F5C16C", "#F07178", "#7DDCB0"];
 const DOC_COLORS = ["#8a8478", "#7c6bb5", "#2f9d6b"];
 const BG = "#0A0A0B";
 
-interface Actor {
-  phase: "idle" | "toDrop" | "place" | "toIdle";
-  left: number;
-  dur: number;
-  step: number;
-  eye: number;
-  blink: number;
-  wait: number;
-  happy: number;
-  reach: number;
-}
-
 interface Doc {
   dead: boolean;
-  phase: "run" | "hand" | "fade";
+  phase: "arrive" | "run" | "deliver" | "fade";
   seg: number;
   left: number;
   dur: number;
@@ -54,20 +45,6 @@ interface Station {
   want: number;
   mode: number;
   wantMode: number;
-}
-
-function createActor(): Actor {
-  return {
-    phase: "idle",
-    left: 0.4,
-    dur: 0.4,
-    step: 0,
-    eye: 1,
-    blink: -1,
-    wait: 2,
-    happy: 0,
-    reach: 0,
-  };
 }
 
 function createDoc(): Doc {
@@ -118,14 +95,6 @@ export default function HeroCommandCenter() {
     let hidden = document.hidden;
     let reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    const sender = createActor();
-    sender.phase = "toDrop";
-    sender.dur = 1.7;
-    sender.left = 1.7;
-    sender.wait = 0.4;
-    const receiver = createActor();
-    receiver.wait = 1.6;
-
     const stations: Station[] = [
       createStation(),
       createStation(),
@@ -164,35 +133,28 @@ export default function HeroCommandCenter() {
     const TOP = new Float32Array(32);
     const EX = new Float32Array(8);
     const EY = new Float32Array(8);
-    const ETYPE = new Int8Array(8);
     const EID = new Int8Array(8);
     const order = new Int8Array(8);
 
-    let senderIdleX = 0;
-    let senderIdleY = 0;
-    let senderDropX = 0;
-    let senderDropY = 0;
-    let recvIdleX = 0;
-    let recvIdleY = 0;
-    let recvTakeX = 0;
-    let recvTakeY = 0;
-    let senderIdleGx = 0;
-    let senderIdleGy = 0;
-    let senderDropGx = 0;
-    let senderDropGy = 0;
-    let recvIdleGx = 0;
-    let recvIdleGy = 0;
-    let recvTakeGx = 0;
-    let recvTakeGy = 0;
+    let lipX = 0;
+    let lipY = 0;
+    let lipW = 0.9;
+    let lipD = 0.72;
+    let trayX = 0;
+    let trayY = 0;
+    let trayW = 0.95;
+    let trayD = 0.72;
+    const slabH = 0.09;
+    let trayScrX = 0;
+    let trayScrY = 0;
+    let spawnLeft = 0.28;
     let BOX = 1.28;
     let BOXH = 1.08;
     let scrX = 0;
     let scrY = 0;
-    let handX = 0;
-    let handY = 0;
-  let visT = 0;
-  let dashPhase = 0;
-  let lastNow = 0;
+    let visT = 0;
+    let dashPhase = 0;
+    let lastNow = 0;
     let frameIndex = 0;
 
     const workRing = new Float64Array(120);
@@ -298,14 +260,14 @@ export default function HeroCommandCenter() {
           stGx[s] = beltGx[s + 1] - 0.64;
           stGy[s] = -1.62;
         }
-        senderIdleGx = -1.45;
-        senderIdleGy = 1.65;
-        senderDropGx = 0.05;
-        senderDropGy = 0.48;
-        recvIdleGx = beltGx[4] + 1.35;
-        recvIdleGy = 1.72;
-        recvTakeGx = beltGx[4] + 0.22;
-        recvTakeGy = 0.55;
+        lipW = 1.15;
+        lipD = 0.95;
+        lipX = -0.85;
+        lipY = -0.18;
+        trayW = 1.15;
+        trayD = 0.95;
+        trayX = beltGx[4] + 0.72;
+        trayY = -0.18;
       } else {
         for (let j = 0; j < 5; j++) {
           beltGx[j] = j * 2.15;
@@ -315,14 +277,14 @@ export default function HeroCommandCenter() {
           stGx[k] = beltGx[k + 1] + 0.02;
           stGy[k] = beltGy[k + 1] - (BOX + 0.28);
         }
-        senderIdleGx = -1.25;
-        senderIdleGy = 0.85;
-        senderDropGx = -0.05;
-        senderDropGy = 0.28;
-        recvIdleGx = beltGx[4] - 0.35;
-        recvIdleGy = beltGy[4] + 0.95;
-        recvTakeGx = beltGx[4] + 0.05;
-        recvTakeGy = beltGy[4] + 0.42;
+        lipW = 0.72;
+        lipD = 0.72;
+        lipX = -0.92;
+        lipY = -0.92;
+        trayW = 0.78;
+        trayD = 0.78;
+        trayX = beltGx[4] + 0.48;
+        trayY = beltGy[4] + 0.48;
       }
     }
 
@@ -403,6 +365,75 @@ export default function HeroCommandCenter() {
       g.stroke();
     }
 
+    function paintSlab(
+      g: CanvasRenderingContext2D,
+      x: number,
+      y: number,
+      w: number,
+      d: number,
+      h: number,
+      top: string,
+    ) {
+      project(x, y, 0, C, 0);
+      project(x + w, y, 0, C, 2);
+      project(x + w, y + d, 0, C, 4);
+      project(x, y + d, 0, C, 6);
+      project(x, y, h, C, 8);
+      project(x + w, y, h, C, 10);
+      project(x + w, y + d, h, C, 12);
+      project(x, y + d, h, C, 14);
+      g.fillStyle = "rgba(32,26,52,0.96)";
+      g.beginPath();
+      g.moveTo(C[2], C[3]);
+      g.lineTo(C[4], C[5]);
+      g.lineTo(C[12], C[13]);
+      g.lineTo(C[10], C[11]);
+      g.closePath();
+      g.fill();
+      g.fillStyle = "rgba(54,42,88,0.94)";
+      g.beginPath();
+      g.moveTo(C[4], C[5]);
+      g.lineTo(C[6], C[7]);
+      g.lineTo(C[14], C[15]);
+      g.lineTo(C[12], C[13]);
+      g.closePath();
+      g.fill();
+      g.fillStyle = top;
+      g.beginPath();
+      g.moveTo(C[8], C[9]);
+      g.lineTo(C[10], C[11]);
+      g.lineTo(C[12], C[13]);
+      g.lineTo(C[14], C[15]);
+      g.closePath();
+      g.fill();
+      g.strokeStyle = "rgba(226,214,255,0.48)";
+      g.lineWidth = 1.25;
+      g.stroke();
+    }
+
+    function paintPadGlow(
+      g: CanvasRenderingContext2D,
+      gx: number,
+      gy: number,
+      rgb: string,
+    ) {
+      projectXY(gx, gy, slabH);
+      const glow = g.createRadialGradient(
+        scrX,
+        scrY,
+        unit * 0.08,
+        scrX,
+        scrY,
+        unit * 1.35,
+      );
+      glow.addColorStop(0, "rgba(" + rgb + ",0.4)");
+      glow.addColorStop(1, "rgba(" + rgb + ",0)");
+      g.fillStyle = glow;
+      g.beginPath();
+      g.arc(scrX, scrY, unit * 1.35, 0, TAU);
+      g.fill();
+    }
+
     function bake(w: number, h: number, ratio: number) {
       const bw = Math.max(1, Math.round(w * ratio));
       const bh = Math.max(1, Math.round(h * ratio));
@@ -469,6 +500,15 @@ export default function HeroCommandCenter() {
       fadeEdges(g, w, h);
 
       g.lineJoin = "round";
+      paintSlab(
+        g,
+        lipX,
+        lipY,
+        lipW,
+        lipD,
+        slabH,
+        "rgba(167,139,250,0.36)",
+      );
       const hw = 0.34;
       for (let seg = 0; seg < 4; seg++) {
         const x0 = beltGx[seg];
@@ -502,15 +542,27 @@ export default function HeroCommandCenter() {
         g.stroke();
       }
       for (let s = 0; s < 4; s++) paintStation(g, s);
+      paintSlab(
+        g,
+        trayX,
+        trayY,
+        trayW,
+        trayD,
+        slabH,
+        "rgba(125,220,176,0.3)",
+      );
+      paintPadGlow(g, lipX + lipW * 0.5, lipY + lipD * 0.5, "139,92,246");
+      paintPadGlow(g, trayX + trayW * 0.5, trayY + trayD * 0.5, "125,220,176");
       if (tall) {
         for (let lab = 0; lab < 4; lab++) {
           stations[lab].lx = stations[lab].sx + unit * 0.72;
           stations[lab].ly = stations[lab].sy - unit * 0.02;
         }
       } else {
-        // Keep the last name off the person waiting at the end of the belt.
-        stations[3].lx = stations[3].sx;
-        stations[3].ly = stations[3].sy - unit * 0.62;
+        for (let lab = 0; lab < 4; lab++) {
+          stations[lab].lx = stations[lab].sx;
+          stations[lab].ly = stations[lab].sy - unit * 0.9;
+        }
       }
     }
 
@@ -567,16 +619,20 @@ export default function HeroCommandCenter() {
         consider(stGx[s], stGy[s] + BOX);
         consider(stGx[s] + BOX, stGy[s] + BOX);
       }
-      consider(senderIdleGx, senderIdleGy);
-      consider(senderDropGx, senderDropGy);
-      consider(recvIdleGx, recvIdleGy);
-      consider(recvTakeGx, recvTakeGy);
+      consider(lipX, lipY);
+      consider(lipX + lipW, lipY);
+      consider(lipX, lipY + lipD);
+      consider(lipX + lipW, lipY + lipD);
+      consider(trayX, trayY);
+      consider(trayX + trayW, trayY);
+      consider(trayX, trayY + trayD);
+      consider(trayX + trayW, trayY + trayD);
       const bw = maxX - minX;
       const bh = maxY - minY;
       const padX = tall ? 18 : 28;
-      const padTop = tall ? 16 : 12;
-      const padBot = tall ? 18 : 36;
-      const head = 1.55;
+      const padTop = tall ? 20 : 22;
+      const padBot = tall ? 22 : 28;
+      const head = tall ? 1.2 : 1.72;
       unit = Math.min((w - padX * 2) / bw, (h - padTop - padBot) / (bh + head));
       const unitCap = tall ? 48 : 58;
       if (unit > unitCap) unit = unitCap;
@@ -605,18 +661,9 @@ export default function HeroCommandCenter() {
         PATH[n * 2 + 1] = scrY;
       }
       for (let u = 0; u < 4; u++) stationU[u] = pl5[u + 1] / total;
-      projectXY(senderIdleGx, senderIdleGy, 0);
-      senderIdleX = scrX;
-      senderIdleY = scrY;
-      projectXY(senderDropGx, senderDropGy, 0);
-      senderDropX = scrX;
-      senderDropY = scrY;
-      projectXY(recvIdleGx, recvIdleGy, 0);
-      recvIdleX = scrX;
-      recvIdleY = scrY;
-      projectXY(recvTakeGx, recvTakeGy, 0);
-      recvTakeX = scrX;
-      recvTakeY = scrY;
+      projectXY(trayX + trayW * 0.5, trayY + trayD * 0.5, slabH + 0.04);
+      trayScrX = scrX;
+      trayScrY = scrY;
       const labelPx = Math.max(11, Math.min(14, unit * 0.24));
       fontLabel = "600 " + Math.round(labelPx) + "px " + fontFamily;
       const bwPx = Math.max(1, Math.round(w * nextDpr));
@@ -690,13 +737,13 @@ export default function HeroCommandCenter() {
         const d = docs[i];
         if (d.dead || d.phase === "fade") continue;
         flowing++;
-        if (d.u < stationU[1]) return false;
+        if (d.phase === "arrive" || d.u < stationU[1]) return false;
       }
       return flowing < 2;
     }
 
     function updateVisual(doc: Doc) {
-      let st = doc.phase === "hand" || doc.phase === "fade" ? 3 : doc.seg >> 1;
+      let st = doc.phase === "deliver" || doc.phase === "fade" ? 3 : doc.seg >> 1;
       if (st > 3) st = 3;
       doc.visual = st >= 2 ? 2 : st >= 1 ? 1 : 0;
     }
@@ -723,33 +770,41 @@ export default function HeroCommandCenter() {
       const doc = pool.pop();
       if (!doc) return;
       doc.dead = false;
-      doc.phase = "run";
+      doc.phase = "arrive";
       doc.seg = 0;
       doc.visual = 0;
       doc.u = 0;
-      beginSeg(doc);
+      doc.u0 = 0;
+      doc.u1 = 0;
+      doc.dur = ARRIVE;
+      doc.left = ARRIVE;
       docs[docCount++] = doc;
     }
 
     function advance(doc: Doc) {
+      if (doc.phase === "arrive") {
+        doc.phase = "run";
+        doc.seg = 0;
+        beginSeg(doc);
+        return;
+      }
       if (doc.phase === "run") {
         if (doc.seg < 7) {
           doc.seg += 1;
           beginSeg(doc);
           return;
         }
-        doc.phase = "hand";
-        doc.dur = HAND;
-        doc.left = HAND;
+        doc.phase = "deliver";
+        doc.dur = DELIVER;
+        doc.left = DELIVER;
         doc.u = stationU[3];
         updateVisual(doc);
         return;
       }
-      if (doc.phase === "hand") {
+      if (doc.phase === "deliver") {
         doc.phase = "fade";
-        doc.dur = 360;
-        doc.left = 360;
-        receiver.happy = 1.5;
+        doc.dur = FADE;
+        doc.left = FADE;
         return;
       }
       doc.dead = true;
@@ -767,72 +822,15 @@ export default function HeroCommandCenter() {
       if (doc.left <= 0) advance(doc);
     }
 
-    function blink(ch: Actor, raw: number) {
-      const rate = reduced ? 0.35 : 1;
-      if (ch.blink < 0) {
-        ch.eye = 1;
-        ch.wait -= raw * rate;
-        if (ch.wait <= 0) ch.blink = 0;
-      } else {
-        ch.blink += raw * rate;
-        if (ch.blink >= 0.13) {
-          ch.blink = -1;
-          ch.eye = 1;
-          ch.wait = reduced ? 5 + Math.random() * 3 : 2.1 + Math.random() * 3.4;
-        } else {
-          const p = ch.blink / 0.13;
-          ch.eye = p < 0.5 ? 1 - p * 2 : (p - 0.5) * 2;
-        }
+    function updateSpawn(stepDt: number, motion: number) {
+      spawnLeft -= stepDt * motion;
+      if (spawnLeft > 0) return;
+      if (!canSpawn()) {
+        spawnLeft = 0.22;
+        return;
       }
-    }
-
-    function beginWalk() {
-      if (!canSpawn()) return false;
-      sender.phase = "toDrop";
-      sender.dur = 1.7;
-      sender.left = 1.7;
-      return true;
-    }
-
-    function updateActors(stepDt: number, motion: number, raw: number) {
-      const walking = sender.phase === "toDrop" || sender.phase === "toIdle";
-      if (walking) sender.step += stepDt * motion * 2.05;
-      else {
-        sender.step +=
-          (Math.round(sender.step) - sender.step) * Math.min(1, stepDt * 8);
-      }
-      sender.left -= stepDt * motion;
-      if (sender.phase === "idle" && sender.left <= 0) {
-        if (!beginWalk()) sender.left = 0.35;
-      } else if (sender.phase === "toDrop" && sender.left <= 0) {
-        sender.phase = "place";
-        sender.dur = 0.42;
-        sender.left = 0.42;
-      } else if (sender.phase === "place" && sender.left <= 0) {
-        spawnAuto();
-        sender.phase = "toIdle";
-        sender.dur = 1.45;
-        sender.left = 1.45;
-      } else if (sender.phase === "toIdle" && sender.left <= 0) {
-        sender.phase = "idle";
-        sender.dur = 0.45;
-        sender.left = 0.45;
-      }
-      blink(sender, raw);
-      blink(receiver, raw);
-      if (receiver.happy > 0) receiver.happy -= raw * (reduced ? 0.35 : 1);
-      let reachTarget = 0;
-      for (let i = 0; i < docCount; i++) {
-        const d = docs[i];
-        if (d.dead) continue;
-        if (d.phase === "hand" || d.phase === "fade" || (d.phase === "run" && d.seg >= 6)) {
-          reachTarget = 1;
-        }
-      }
-      const prev = receiver.reach;
-      receiver.reach =
-        prev + (reachTarget - prev) * Math.min(1, raw * motion * 6);
-      if (reachTarget && !walking) receiver.step += stepDt * motion * 1.2;
+      spawnAuto();
+      spawnLeft = 0.35;
     }
 
     function affect(doc: Doc) {
@@ -840,7 +838,11 @@ export default function HeroCommandCenter() {
       let idx = 0;
       let amount = 0.4;
       let mode = 0;
-      if (doc.phase === "hand" || doc.phase === "fade") {
+      if (doc.phase === "arrive") {
+        idx = 0;
+        amount = 0.7;
+        mode = 0;
+      } else if (doc.phase === "deliver" || doc.phase === "fade") {
         idx = 3;
         amount = 1;
         mode = 3;
@@ -865,7 +867,7 @@ export default function HeroCommandCenter() {
         visT += raw;
         if (visT > 1000) visT -= 1000;
       }
-      updateActors(raw, motion, raw);
+      updateSpawn(raw, motion);
       for (let i = 0; i < docCount; i++) {
         const d = docs[i];
         if (d.dead) continue;
@@ -895,43 +897,23 @@ export default function HeroCommandCenter() {
       }
     }
 
-    function actorFoot() {
-      let p = 0;
-      if (sender.phase === "toDrop") p = smooth(1 - sender.left / sender.dur);
-      else if (sender.phase === "place") p = 1;
-      else if (sender.phase === "toIdle") p = 1 - smooth(1 - sender.left / sender.dur);
-      scrX = senderIdleX + (senderDropX - senderIdleX) * p;
-      scrY = senderIdleY + (senderDropY - senderIdleY) * p;
-    }
-
-    function personHand(
-      x: number,
-      y: number,
-      face: number,
-      reach: number,
-      carry: number,
-      scale: number,
-      bob: number,
-    ) {
-      const hx = 12 + reach * 12 + carry * 10;
-      const hy = -34 + bob + reach * 14;
-      handX = x + hx * scale * face;
-      handY = y + hy * scale;
-    }
-
     function docPosition(doc: Doc) {
-      if (doc.phase === "hand" || doc.phase === "fade") {
-        pathPoint(stationU[3]);
+      if (doc.phase === "arrive") {
+        pathPoint(0);
+        const dur = doc.dur > 0 ? doc.dur : 1;
+        const t = smooth(1 - doc.left / dur);
+        scrY -= (1 - t) * unit * 0.42;
+        return;
+      }
+      if (doc.phase === "deliver" || doc.phase === "fade") {
+        pathPoint(1);
         const ax = scrX;
         const ay = scrY;
-        const reach = receiver.reach;
-        const rx = recvIdleX + (recvTakeX - recvIdleX) * reach;
-        const ry = recvIdleY + (recvTakeY - recvIdleY) * reach;
-        personHand(rx, ry, -1, reach > 0.65 ? reach : 0.65, 0, unit / 46, 0);
         const dur = doc.dur > 0 ? doc.dur : 1;
         const t = doc.phase === "fade" ? 1 : smooth(1 - doc.left / dur);
-        scrX = ax + (handX - ax) * t;
-        scrY = ay + (handY - ay) * t;
+        const arc = Math.sin(t * Math.PI) * unit * 0.16;
+        scrX = ax + (trayScrX - ax) * t;
+        scrY = ay + (trayScrY - ay) * t - arc;
         return;
       }
       pathPoint(doc.u);
@@ -1057,145 +1039,46 @@ export default function HeroCommandCenter() {
       ctx.globalAlpha = 1;
     }
 
-    function drawPerson(
-      x: number,
-      y: number,
-      scale: number,
-      face: number,
-      ch: Actor,
-      carry: number,
-      reach: number,
-      walking: number,
-    ) {
-      const idle = 1 - (walking > 1 ? 1 : walking);
-      const breath = reduced ? 0 : Math.sin(visT * 1.7 + (face > 0 ? 0 : 1.3)) * idle * 1.15;
-      const bob =
-        breath + (walking > 0.2 ? Math.abs(Math.sin(ch.step * TAU)) * -2.5 : 0);
-      const lean = reduced
-        ? 0
-        : Math.sin(visT * 0.9 + ch.step) * (walking > 0.2 ? 0.4 : 1.3);
-      personHand(x + lean, y, face, reach, carry, scale, bob);
-      ctx.save();
-      ctx.translate(x + lean, y);
-      ctx.scale(scale * face, scale);
-      ctx.fillStyle = "rgba(0,0,0,0.4)";
-      ctx.beginPath();
-      ctx.ellipse(0, 0, 16, 6, 0, 0, TAU);
-      ctx.fill();
-      const swing = Math.sin(ch.step * TAU) * (0.25 + (walking > 1 ? 1 : walking) * 0.75);
-      ctx.strokeStyle = "#6d6484";
-      ctx.lineWidth = 4.2;
-      ctx.lineCap = "round";
-      ctx.beginPath();
-      ctx.moveTo(-4, -24 + bob);
-      ctx.lineTo(-3.5 + swing * 5, -1);
-      ctx.moveTo(3.5, -24 + bob);
-      ctx.lineTo(3.5 - swing * 5, -1);
-      ctx.stroke();
-      roundRect(ctx, -11, -46 + bob, 22, 24, 7);
-      ctx.fillStyle = "#1b1726";
-      ctx.fill();
-      ctx.fillStyle = "#8B5CF6";
-      roundRect(ctx, -11, -46 + bob, 22, 5.5, 3);
-      ctx.fill();
-      const hy = -40 + bob;
-      const hx = 12 + reach * 12 + carry * 10;
-      const hand = -34 + bob + reach * 14;
-      ctx.strokeStyle = "#1b1726";
-      ctx.lineWidth = 3.6;
-      ctx.beginPath();
-      ctx.moveTo(-8, hy);
-      ctx.lineTo(-14 - swing * 6, -22 + bob);
-      ctx.moveTo(8, hy);
-      ctx.lineTo(hx, hand);
-      ctx.stroke();
-      ctx.fillStyle = "#f0c9a0";
-      ctx.beginPath();
-      ctx.arc(hx, hand, 2.4, 0, TAU);
-      ctx.fill();
-      const headY = -58 + bob;
-      ctx.fillStyle = "#241833";
-      ctx.beginPath();
-      ctx.arc(0, headY - 1, 10.6, 0, TAU);
-      ctx.fill();
-      ctx.fillStyle = "#f0c9a0";
-      ctx.beginPath();
-      ctx.arc(0, headY + 2.4, 8.4, 0, TAU);
-      ctx.fill();
-      if (ch.eye < 0.22) {
-        ctx.strokeStyle = "#3a241c";
-        ctx.lineWidth = 1.2;
-        ctx.beginPath();
-        ctx.moveTo(-5.2, headY + 1.5);
-        ctx.lineTo(-2.1, headY + 1.5);
-        ctx.moveTo(2.1, headY + 1.5);
-        ctx.lineTo(5.2, headY + 1.5);
-        ctx.stroke();
-      } else {
-        ctx.fillStyle = "#2a1a16";
-        ctx.beginPath();
-        ctx.ellipse(-3.5, headY + 1.4, 1.25, 1.65 * ch.eye, 0, 0, TAU);
-        ctx.ellipse(3.5, headY + 1.4, 1.25, 1.65 * ch.eye, 0, 0, TAU);
-        ctx.fill();
-      }
-      if (ch.happy > 0.08) {
-        ctx.strokeStyle = "#8d5b48";
-        ctx.lineWidth = 1.15;
-        ctx.beginPath();
-        ctx.arc(0, headY + 4.2, 3, 0.15, 3);
-        ctx.stroke();
-      }
-      ctx.restore();
-    }
-
-    function drawSender(x: number, y: number, scale: number) {
-      const carry =
-        sender.phase === "toDrop"
-          ? 1
-          : sender.phase === "place"
-            ? sender.left / sender.dur
-            : 0;
-      const reach = sender.phase === "place" ? 1 - sender.left / sender.dur : 0;
-      const face = sender.phase === "toIdle" ? -1 : 1;
-      const walking = sender.phase === "toDrop" || sender.phase === "toIdle" ? 1 : 0;
-      drawPerson(x, y, scale, face, sender, carry, reach, walking);
-      if (carry > 0.04) {
-        drawPaper(handX + unit * 0.18, handY + unit * 0.16, unit * 0.5, 0, carry);
-      }
-    }
-
-    function drawReceiver(x: number, y: number, scale: number) {
-      const reach = receiver.reach;
-      drawPerson(x, y, scale, -1, receiver, 0, reach, reach);
-    }
-
     function drawDoc(doc: Doc, x: number, y: number) {
       let alpha = 1;
-      if (doc.phase === "fade") {
+      let scale = 1;
+      let glowA = 0;
+      let glowMode = 0;
+      if (doc.phase === "arrive") {
+        const dur = doc.dur > 0 ? doc.dur : 1;
+        const t = smooth(1 - doc.left / dur);
+        alpha = 0.2 + 0.8 * t;
+        scale = 0.82 + 0.18 * t;
+        glowA = 0.62 * (1 - t) + 0.16;
+        glowMode = 0;
+      } else if (doc.phase === "deliver") {
+        const dur = doc.dur > 0 ? doc.dur : 1;
+        const t = smooth(1 - doc.left / dur);
+        glowA = 0.2 + t * 0.42;
+        glowMode = 3;
+      } else if (doc.phase === "fade") {
         alpha = doc.left > 0 ? doc.left / doc.dur : 0;
+        glowA = 0.5 * alpha;
+        glowMode = 3;
       }
-      drawPaper(x, y, unit * 0.9, doc.visual, alpha);
+      if (glowA > 0.02) {
+        const sprite = glowSprites[glowMode] || glowSprites[0];
+        const size = unit * (doc.phase === "arrive" ? 1.65 : 1.85);
+        ctx.globalAlpha = glowA;
+        ctx.drawImage(sprite, x - size * 0.5, y - size * 0.62, size, size);
+        ctx.globalAlpha = 1;
+      }
+      drawPaper(x, y, unit * 0.9 * scale, doc.visual, alpha);
     }
 
     function drawEntities() {
       let n = 0;
-      actorFoot();
-      EX[n] = scrX;
-      EY[n] = scrY;
-      ETYPE[n] = 0;
-      n++;
-      const reach = receiver.reach;
-      EX[n] = recvIdleX + (recvTakeX - recvIdleX) * reach;
-      EY[n] = recvIdleY + (recvTakeY - recvIdleY) * reach;
-      ETYPE[n] = 1;
-      n++;
       for (let i = 0; i < docCount; i++) {
         const d = docs[i];
         if (d.dead) continue;
         docPosition(d);
         EX[n] = scrX;
         EY[n] = scrY;
-        ETYPE[n] = 2;
         EID[n] = i;
         n++;
       }
@@ -1209,13 +1092,9 @@ export default function HeroCommandCenter() {
         }
         order[q + 1] = key;
       }
-      const scale = unit / 46;
       for (let e = 0; e < n; e++) {
         const id = order[e];
-        const kind = ETYPE[id];
-        if (kind === 0) drawSender(EX[id], EY[id], scale);
-        else if (kind === 1) drawReceiver(EX[id], EY[id], scale);
-        else drawDoc(docs[EID[id]], EX[id], EY[id]);
+        drawDoc(docs[EID[id]], EX[id], EY[id]);
       }
     }
 
