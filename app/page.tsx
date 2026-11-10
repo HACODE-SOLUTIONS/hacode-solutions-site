@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import HeroProcess from "@/components/HeroProcess";
+import HeroCommandCenter from "@/components/HeroCommandCenter";
 
 const description =
   "HACODE is an AI-native service business delivering Outcomes as a Service. We find the bottlenecks slowing your company down and deliver the result — less time, lower cost, no manual work — not software.";
@@ -89,7 +89,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        <HeroProcess />
+        <HeroCommandCenter />
       </div>
     </section>
   );
