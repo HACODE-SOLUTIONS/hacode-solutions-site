@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 /**
  * Hero portrait of the command-center pipeline.
  * Canvas only: documents and four glass stations.
+ * Station tops stay blank. Labels sit above the cubes.
  * A document materializes at intake, rides the belt, and fades into the tray.
  * The loop is automatic. There are no controls, counts, or panels.
  */
@@ -933,54 +934,6 @@ export default function HeroCommandCenter() {
       ctx.stroke();
     }
 
-    function drawInterior(s: number, heat: number) {
-      const x = stations[s].sx;
-      const y = stations[s].sy;
-      const k = unit * 0.16;
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.globalAlpha = 0.4 + heat * 0.6;
-      ctx.strokeStyle = heat > 0.55 ? "#ffffff" : "#d6ccff";
-      ctx.fillStyle = heat > 0.55 ? "#ffffff" : "#d6ccff";
-      ctx.lineWidth = Math.max(1, unit * 0.03);
-      ctx.lineCap = "round";
-      if (s === 0) {
-        const p = reduced ? 0.45 : (visT * 0.8) % 1;
-        ctx.beginPath();
-        ctx.moveTo(-k, -k + p * k * 2);
-        ctx.lineTo(k, -k + p * k * 2);
-        ctx.stroke();
-      } else if (s === 1) {
-        const pulse = reduced ? 1 : 0.65 + Math.sin(visT * 3) * 0.35;
-        ctx.globalAlpha *= pulse;
-        ctx.beginPath();
-        ctx.moveTo(-k, 0);
-        ctx.lineTo(0, -k * 0.6);
-        ctx.lineTo(k, 0);
-        ctx.moveTo(0, -k * 0.6);
-        ctx.lineTo(0, k * 0.7);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(-k, 0, 2.2, 0, TAU);
-        ctx.arc(0, -k * 0.6, 2.2, 0, TAU);
-        ctx.arc(k, 0, 2.2, 0, TAU);
-        ctx.fill();
-      } else if (s === 2) {
-        ctx.beginPath();
-        ctx.arc(0, 2, k * 0.55, Math.PI, 0);
-        ctx.arc(-k * 0.45, 2, k * 0.38, Math.PI, 0);
-        ctx.arc(k * 0.48, 4, k * 0.36, Math.PI, 0);
-        ctx.stroke();
-      } else {
-        ctx.beginPath();
-        ctx.moveTo(-k * 0.45, 0);
-        ctx.lineTo(-k * 0.05, k * 0.4);
-        ctx.lineTo(k * 0.55, -k * 0.45);
-        ctx.stroke();
-      }
-      ctx.restore();
-    }
-
     function drawStationsLive() {
       const names = tall ? ST_TALL : ST_WIDE;
       for (let s = 0; s < 4; s++) {
@@ -1002,7 +955,6 @@ export default function HeroCommandCenter() {
           ctx.fill();
         }
         ctx.globalAlpha = 1;
-        drawInterior(s, st.heat);
         if (!reduced) {
           const sheen = Math.sin(visT * 1.4 + s) * unit * 0.12;
           ctx.globalAlpha = 0.18;
