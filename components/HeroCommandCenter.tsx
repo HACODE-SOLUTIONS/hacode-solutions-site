@@ -1,0 +1,1348 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+
+/**
+ * Hero portrait of the command-center pipeline.
+ * Canvas only: two people, one document, four glass stations.
+ * The loop is automatic. There are no controls, counts, or panels.
+ */
+
+const MOVE = new Float32Array([700, 1000, 1000, 900]);
+const PROC = new Float32Array([900, 1100, 1000, 900]);
+const HAND = 650;
+const COS = Math.cos(Math.PI / 6);
+const SIN = Math.sin(Math.PI / 6);
+const PATH_N = 96;
+const TAU = Math.PI * 2;
+const ST_WIDE = ["Intake", "AI processing", "Cloud validation", "Delivery"];
+const ST_TALL = ["Intake", "AI", "Cloud", "Delivery"];
+const GLOW_COLORS = ["#8B5CF6", "#F5C16C", "#F07178", "#7DDCB0"];
+const DOC_COLORS = ["#8a8478", "#7c6bb5", "#2f9d6b"];
+const BG = "#0A0A0B";
+
+interface Actor {
+  phase: "idle" | "toDrop" | "place" | "toIdle";
+  left: number;
+  dur: number;
+  step: number;
+  eye: number;
+  blink: number;
+  wait: number;
+  happy: number;
+  reach: number;
+}
+
+interface Doc {
+  dead: boolean;
+  phase: "run" | "hand" | "fade";
+  seg: number;
+  left: number;
+  dur: number;
+  u: number;
+  u0: number;
+  u1: number;
+  visual: number;
+}
+
+interface Station {
+  sx: number;
+  sy: number;
+  lx: number;
+  ly: number;
+  heat: number;
+  want: number;
+  mode: number;
+  wantMode: number;
+}
+
+function createActor(): Actor {
+  return {
+    phase: "idle",
+    left: 0.4,
+    dur: 0.4,
+    step: 0,
+    eye: 1,
+    blink: -1,
+    wait: 2,
+    happy: 0,
+    reach: 0,
+  };
+}
+
+function createDoc(): Doc {
+  return {
+    dead: true,
+    phase: "run",
+    seg: 0,
+    left: 1,
+    dur: 1,
+    u: 0,
+    u0: 0,
+    u1: 0,
+    visual: 0,
+  };
+}
+
+function createStation(): Station {
+  return {
+    sx: 0,
+    sy: 0,
+    lx: 0,
+    ly: 0,
+    heat: 0,
+    want: 0,
+    mode: 0,
+    wantMode: 0,
+  };
+}
+
+export default function HeroCommandCenter() {
+  const hostRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const host = hostRef.current;
+    const canvas = canvasRef.current;
+    if (!host || !canvas) return;
+    const stage: HTMLDivElement = host;
+    const surface: HTMLCanvasElement = canvas;
+    const ctxOrNull = surface.getContext("2d", { alpha: false });
+    if (!ctxOrNull) return;
+    const ctx = ctxOrNull;
+
+    let disposed = false;
+    let looping = false;
+    let raf = 0;
+    let onScreen = true;
+    let hidden = document.hidden;
+    let reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const sender = createActor();
+    sender.phase = "toDrop";
+    sender.dur = 1.7;
+    sender.left = 1.7;
+    sender.wait = 0.4;
+    const receiver = createActor();
+    receiver.wait = 1.6;
+
+    const stations: Station[] = [
+      createStation(),
+      createStation(),
+      createStation(),
+      createStation(),
+    ];
+    const pool: Doc[] = [];
+    for (let i = 0; i < 8; i++) pool.push(createDoc());
+    const docs: Doc[] = new Array(8);
+    let docCount = 0;
+
+    let cssW = 0;
+    let cssH = 0;
+    let dpr = 1;
+    let unit = 40;
+    let originX = 0;
+    let originY = 0;
+    let tall = false;
+    let viewDirty = true;
+    let builtCache = false;
+    let layoutThisFrame = false;
+    let fontLabel = "600 13px Inter, sans-serif";
+    const fontFamily =
+      getComputedStyle(document.body).fontFamily || "Inter, sans-serif";
+
+    const stationU = new Float32Array(4);
+    const PATH = new Float32Array(PATH_N * 2);
+    const beltGx = new Float32Array(5);
+    const beltGy = new Float32Array(5);
+    const stGx = new Float32Array(4);
+    const stGy = new Float32Array(4);
+    const px5 = new Float32Array(5);
+    const py5 = new Float32Array(5);
+    const pl5 = new Float32Array(5);
+    const C = new Float32Array(16);
+    const TOP = new Float32Array(32);
+    const EX = new Float32Array(8);
+    const EY = new Float32Array(8);
+    const ETYPE = new Int8Array(8);
+    const EID = new Int8Array(8);
+    const order = new Int8Array(8);
+
+    let senderIdleX = 0;
+    let senderIdleY = 0;
+    let senderDropX = 0;
+    let senderDropY = 0;
+    let recvIdleX = 0;
+    let recvIdleY = 0;
+    let recvTakeX = 0;
+    let recvTakeY = 0;
+    let senderIdleGx = 0;
+    let senderIdleGy = 0;
+    let senderDropGx = 0;
+    let senderDropGy = 0;
+    let recvIdleGx = 0;
+    let recvIdleGy = 0;
+    let recvTakeGx = 0;
+    let recvTakeGy = 0;
+    let BOX = 1.28;
+    let BOXH = 1.08;
+    let scrX = 0;
+    let scrY = 0;
+    let handX = 0;
+    let handY = 0;
+  let visT = 0;
+  let dashPhase = 0;
+  let lastNow = 0;
+    let frameIndex = 0;
+
+    const workRing = new Float64Array(120);
+    let workCount = 0;
+    let workIdx = 0;
+    let workSum = 0;
+    let workAvg = 0;
+    let workMax = 0;
+
+    let floorCache: HTMLCanvasElement | null = null;
+    let floorCtx: CanvasRenderingContext2D | null = null;
+    const docSprites: HTMLCanvasElement[] = new Array(3);
+    const glowSprites: HTMLCanvasElement[] = new Array(4);
+
+    function project(
+      gx: number,
+      gy: number,
+      gz: number,
+      into: Float32Array,
+      i: number,
+    ) {
+      into[i] = originX + (gx - gy) * COS * unit;
+      into[i + 1] = originY + (gx + gy) * SIN * unit - gz * unit;
+    }
+
+    function projectXY(gx: number, gy: number, gz: number) {
+      scrX = originX + (gx - gy) * COS * unit;
+      scrY = originY + (gx + gy) * SIN * unit - gz * unit;
+    }
+
+    function pathPoint(u: number) {
+      let t = u;
+      if (t < 0) t = 0;
+      else if (t > 1) t = 1;
+      let f = t * (PATH_N - 1);
+      let i = f | 0;
+      let frac = f - i;
+      if (i >= PATH_N - 1) {
+        i = PATH_N - 2;
+        frac = 1;
+      }
+      const j = i * 2;
+      const k = j + 2;
+      scrX = PATH[j] + (PATH[k] - PATH[j]) * frac;
+      scrY = PATH[j + 1] + (PATH[k + 1] - PATH[j + 1]) * frac;
+    }
+
+    function polyPoint(dist: number) {
+      let i = 1;
+      while (i < 4 && pl5[i] < dist) i++;
+      const span = pl5[i] - pl5[i - 1] || 1;
+      const t = (dist - pl5[i - 1]) / span;
+      scrX = px5[i - 1] + (px5[i] - px5[i - 1]) * t;
+      scrY = py5[i - 1] + (py5[i] - py5[i - 1]) * t;
+    }
+
+    function clamp01(t: number) {
+      if (t < 0) return 0;
+      if (t > 1) return 1;
+      return t;
+    }
+
+    function smooth(t: number) {
+      const x = clamp01(t);
+      return x * x * (3 - 2 * x);
+    }
+
+    function trace(g: CanvasRenderingContext2D, o: number) {
+      g.beginPath();
+      g.moveTo(C[o], C[o + 1]);
+      g.lineTo(C[o + 2], C[o + 3]);
+      g.lineTo(C[o + 4], C[o + 5]);
+      g.lineTo(C[o + 6], C[o + 7]);
+      g.closePath();
+    }
+
+    function roundRect(
+      g: CanvasRenderingContext2D,
+      x: number,
+      y: number,
+      w: number,
+      h: number,
+      r: number,
+    ) {
+      g.beginPath();
+      g.moveTo(x + r, y);
+      g.arcTo(x + w, y, x + w, y + h, r);
+      g.arcTo(x + w, y + h, x, y + h, r);
+      g.arcTo(x, y + h, x, y, r);
+      g.arcTo(x, y, x + w, y, r);
+      g.closePath();
+    }
+
+    function fillGrid() {
+      BOX = tall ? 0.9 : 1.28;
+      BOXH = tall ? 0.74 : 1.08;
+      if (!tall) {
+        for (let i = 0; i < 5; i++) {
+          beltGx[i] = i * 2.55;
+          beltGy[i] = 0;
+        }
+        for (let s = 0; s < 4; s++) {
+          stGx[s] = beltGx[s + 1] - 0.64;
+          stGy[s] = -1.62;
+        }
+        senderIdleGx = -1.45;
+        senderIdleGy = 1.65;
+        senderDropGx = 0.05;
+        senderDropGy = 0.48;
+        recvIdleGx = beltGx[4] + 1.35;
+        recvIdleGy = 1.72;
+        recvTakeGx = beltGx[4] + 0.22;
+        recvTakeGy = 0.55;
+      } else {
+        for (let j = 0; j < 5; j++) {
+          beltGx[j] = j * 2.15;
+          beltGy[j] = j * 2.15;
+        }
+        for (let k = 0; k < 4; k++) {
+          stGx[k] = beltGx[k + 1] + 0.02;
+          stGy[k] = beltGy[k + 1] - (BOX + 0.28);
+        }
+        senderIdleGx = -1.25;
+        senderIdleGy = 0.85;
+        senderDropGx = -0.05;
+        senderDropGy = 0.28;
+        recvIdleGx = beltGx[4] - 0.35;
+        recvIdleGy = beltGy[4] + 0.95;
+        recvTakeGx = beltGx[4] + 0.05;
+        recvTakeGy = beltGy[4] + 0.42;
+      }
+    }
+
+    function paintStation(g: CanvasRenderingContext2D, s: number) {
+      const x = stGx[s];
+      const y = stGy[s];
+      const w = BOX;
+      const d = BOX;
+      const h = BOXH;
+      project(x, y, 0, C, 0);
+      project(x + w, y, 0, C, 2);
+      project(x + w, y + d, 0, C, 4);
+      project(x, y + d, 0, C, 6);
+      project(x, y, h, C, 8);
+      project(x + w, y, h, C, 10);
+      project(x + w, y + d, h, C, 12);
+      project(x, y + d, h, C, 14);
+      const base = s * 8;
+      TOP[base] = C[8];
+      TOP[base + 1] = C[9];
+      TOP[base + 2] = C[10];
+      TOP[base + 3] = C[11];
+      TOP[base + 4] = C[12];
+      TOP[base + 5] = C[13];
+      TOP[base + 6] = C[14];
+      TOP[base + 7] = C[15];
+      stations[s].sx = (C[8] + C[10] + C[12] + C[14]) * 0.25;
+      stations[s].sy = (C[9] + C[11] + C[13] + C[15]) * 0.25;
+      let maxY = C[1];
+      for (let i = 0; i < 8; i += 2) {
+        if (C[i + 1] > maxY) maxY = C[i + 1];
+      }
+      stations[s].lx = (C[0] + C[2] + C[4] + C[6]) * 0.25;
+      stations[s].ly = maxY + Math.max(14, unit * 0.28);
+      g.fillStyle = "rgba(42,32,68,0.96)";
+      g.beginPath();
+      g.moveTo(C[2], C[3]);
+      g.lineTo(C[4], C[5]);
+      g.lineTo(C[12], C[13]);
+      g.lineTo(C[10], C[11]);
+      g.closePath();
+      g.fill();
+      g.fillStyle = "rgba(64,48,108,0.94)";
+      g.beginPath();
+      g.moveTo(C[4], C[5]);
+      g.lineTo(C[6], C[7]);
+      g.lineTo(C[14], C[15]);
+      g.lineTo(C[12], C[13]);
+      g.closePath();
+      g.fill();
+      const grad = g.createLinearGradient(C[8], C[9], C[12], C[13]);
+      grad.addColorStop(0, "rgba(255,255,255,0.38)");
+      grad.addColorStop(0.28, "rgba(198,184,255,0.2)");
+      grad.addColorStop(1, "rgba(70,52,120,0.18)");
+      g.fillStyle = grad;
+      g.beginPath();
+      g.moveTo(C[8], C[9]);
+      g.lineTo(C[10], C[11]);
+      g.lineTo(C[12], C[13]);
+      g.lineTo(C[14], C[15]);
+      g.closePath();
+      g.fill();
+      g.strokeStyle = "rgba(232,224,255,0.62)";
+      g.lineWidth = 1.35;
+      g.stroke();
+      g.beginPath();
+      g.moveTo(C[2], C[3]);
+      g.lineTo(C[4], C[5]);
+      g.lineTo(C[12], C[13]);
+      g.lineTo(C[10], C[11]);
+      g.closePath();
+      g.moveTo(C[4], C[5]);
+      g.lineTo(C[6], C[7]);
+      g.lineTo(C[14], C[15]);
+      g.lineTo(C[12], C[13]);
+      g.closePath();
+      g.strokeStyle = "rgba(214,204,255,0.35)";
+      g.stroke();
+    }
+
+    function bake(w: number, h: number, ratio: number) {
+      const bw = Math.max(1, Math.round(w * ratio));
+      const bh = Math.max(1, Math.round(h * ratio));
+      if (!floorCache) {
+        floorCache = document.createElement("canvas");
+        floorCtx = floorCache.getContext("2d");
+      }
+      if (!floorCtx || !floorCache) return;
+      if (floorCache.width !== bw || floorCache.height !== bh) {
+        floorCache.width = bw;
+        floorCache.height = bh;
+        floorCtx = floorCache.getContext("2d");
+      }
+      if (!floorCtx) return;
+      const g = floorCtx;
+      g.setTransform(ratio, 0, 0, ratio, 0, 0);
+      g.fillStyle = BG;
+      g.fillRect(0, 0, w, h);
+      pathPoint(0.5);
+      const glow = g.createRadialGradient(
+        scrX,
+        scrY,
+        unit * 0.4,
+        scrX,
+        scrY,
+        unit * 7.5,
+      );
+      glow.addColorStop(0, "rgba(139,92,246,0.18)");
+      glow.addColorStop(1, "rgba(139,92,246,0)");
+      g.fillStyle = glow;
+      g.fillRect(0, 0, w, h);
+      g.lineWidth = 1;
+      for (let gy = -8; gy <= 16; gy++) {
+        for (let gx = -8; gx <= 16; gx++) {
+          project(gx, gy, 0, C, 0);
+          project(gx + 1, gy, 0, C, 2);
+          project(gx + 1, gy + 1, 0, C, 4);
+          project(gx, gy + 1, 0, C, 6);
+          if (
+            C[0] < -unit ||
+            C[1] < -unit ||
+            C[0] > w + unit ||
+            C[1] > h + unit * 2
+          ) {
+            continue;
+          }
+          const near = tall ? Math.abs(gx - gy) <= 1 : gy >= -1 && gy <= 1;
+          const alt = (gx + gy) & 1;
+          g.fillStyle = near
+            ? alt
+              ? "#14121c"
+              : "#121018"
+            : alt
+              ? "#101014"
+              : "#0d0d11";
+          trace(g, 0);
+          g.fill();
+          g.strokeStyle = near
+            ? "rgba(167,139,250,0.16)"
+            : "rgba(255,255,255,0.035)";
+          g.stroke();
+        }
+      }
+      fadeEdges(g, w, h);
+
+      g.lineJoin = "round";
+      const hw = 0.34;
+      for (let seg = 0; seg < 4; seg++) {
+        const x0 = beltGx[seg];
+        const y0 = beltGy[seg];
+        const x1 = beltGx[seg + 1];
+        const y1 = beltGy[seg + 1];
+        const dx = x1 - x0;
+        const dy = y1 - y0;
+        const len = Math.hypot(dx, dy) || 1;
+        const nx = (-dy / len) * hw;
+        const ny = (dx / len) * hw;
+        project(x0 + nx, y0 + ny, 0.02, C, 0);
+        project(x1 + nx, y1 + ny, 0.02, C, 2);
+        project(x1 - nx, y1 - ny, 0.02, C, 4);
+        project(x0 - nx, y0 - ny, 0.02, C, 6);
+        g.fillStyle = "#1a1526";
+        trace(g, 0);
+        g.fill();
+        g.strokeStyle = "rgba(196,181,253,0.28)";
+        g.lineWidth = 1;
+        g.stroke();
+        project(x0 + nx, y0 + ny, 0.1, C, 0);
+        project(x1 + nx, y1 + ny, 0.1, C, 2);
+        project(x1 - nx, y1 - ny, 0.1, C, 4);
+        project(x0 - nx, y0 - ny, 0.1, C, 6);
+        g.fillStyle = "#241c33";
+        trace(g, 0);
+        g.fill();
+        g.strokeStyle = "rgba(226,214,255,0.35)";
+        g.lineWidth = 1.25;
+        g.stroke();
+      }
+      for (let s = 0; s < 4; s++) paintStation(g, s);
+      if (tall) {
+        for (let lab = 0; lab < 4; lab++) {
+          stations[lab].lx = stations[lab].sx + unit * 0.72;
+          stations[lab].ly = stations[lab].sy - unit * 0.02;
+        }
+      } else {
+        // Keep the last name off the person waiting at the end of the belt.
+        stations[3].lx = stations[3].sx;
+        stations[3].ly = stations[3].sy - unit * 0.62;
+      }
+    }
+
+    function fadeEdges(g: CanvasRenderingContext2D, w: number, h: number) {
+      const m = Math.max(48, Math.min(96, Math.min(w, h) * 0.18));
+      const solid = "rgba(10,10,11,1)";
+      const clear = "rgba(10,10,11,0)";
+      const left = g.createLinearGradient(0, 0, m, 0);
+      left.addColorStop(0, solid);
+      left.addColorStop(1, clear);
+      g.fillStyle = left;
+      g.fillRect(0, 0, m, h);
+      const right = g.createLinearGradient(w, 0, w - m, 0);
+      right.addColorStop(0, solid);
+      right.addColorStop(1, clear);
+      g.fillStyle = right;
+      g.fillRect(w - m, 0, m, h);
+      const top = g.createLinearGradient(0, 0, 0, m);
+      top.addColorStop(0, solid);
+      top.addColorStop(1, clear);
+      g.fillStyle = top;
+      g.fillRect(0, 0, w, m);
+      const bottom = g.createLinearGradient(0, h, 0, h - m);
+      bottom.addColorStop(0, solid);
+      bottom.addColorStop(1, clear);
+      g.fillStyle = bottom;
+      g.fillRect(0, h - m, w, m);
+    }
+
+    function layout() {
+      layoutThisFrame = true;
+      const w = stage.clientWidth;
+      const h = stage.clientHeight;
+      const nextDpr = Math.min(2, window.devicePixelRatio || 1);
+      if (w < 2 || h < 2) return;
+      tall = w < 520;
+      fillGrid();
+      let minX = 1e9;
+      let minY = 1e9;
+      let maxX = -1e9;
+      let maxY = -1e9;
+      function consider(gx: number, gy: number) {
+        const x = (gx - gy) * COS;
+        const y = (gx + gy) * SIN;
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+      }
+      for (let i = 0; i < 5; i++) consider(beltGx[i], beltGy[i]);
+      for (let s = 0; s < 4; s++) {
+        consider(stGx[s], stGy[s]);
+        consider(stGx[s] + BOX, stGy[s]);
+        consider(stGx[s], stGy[s] + BOX);
+        consider(stGx[s] + BOX, stGy[s] + BOX);
+      }
+      consider(senderIdleGx, senderIdleGy);
+      consider(senderDropGx, senderDropGy);
+      consider(recvIdleGx, recvIdleGy);
+      consider(recvTakeGx, recvTakeGy);
+      const bw = maxX - minX;
+      const bh = maxY - minY;
+      const padX = tall ? 18 : 28;
+      const padTop = tall ? 16 : 12;
+      const padBot = tall ? 18 : 36;
+      const head = 1.55;
+      unit = Math.min((w - padX * 2) / bw, (h - padTop - padBot) / (bh + head));
+      const unitCap = tall ? 48 : 58;
+      if (unit > unitCap) unit = unitCap;
+      if (unit < 16) unit = 16;
+      originX = padX + (w - padX * 2 - bw * unit) / 2 - minX * unit;
+      originY =
+        padTop +
+        head * unit +
+        ((h - padTop - padBot) - (bh + head) * unit) / 2 -
+        minY * unit;
+      for (let b = 0; b < 5; b++) {
+        projectXY(beltGx[b], beltGy[b], 0.12);
+        px5[b] = scrX;
+        py5[b] = scrY;
+      }
+      pl5[0] = 0;
+      for (let p = 1; p < 5; p++) {
+        const dx = px5[p] - px5[p - 1];
+        const dy = py5[p] - py5[p - 1];
+        pl5[p] = pl5[p - 1] + Math.hypot(dx, dy);
+      }
+      const total = pl5[4] || 1;
+      for (let n = 0; n < PATH_N; n++) {
+        polyPoint((n / (PATH_N - 1)) * total);
+        PATH[n * 2] = scrX;
+        PATH[n * 2 + 1] = scrY;
+      }
+      for (let u = 0; u < 4; u++) stationU[u] = pl5[u + 1] / total;
+      projectXY(senderIdleGx, senderIdleGy, 0);
+      senderIdleX = scrX;
+      senderIdleY = scrY;
+      projectXY(senderDropGx, senderDropGy, 0);
+      senderDropX = scrX;
+      senderDropY = scrY;
+      projectXY(recvIdleGx, recvIdleGy, 0);
+      recvIdleX = scrX;
+      recvIdleY = scrY;
+      projectXY(recvTakeGx, recvTakeGy, 0);
+      recvTakeX = scrX;
+      recvTakeY = scrY;
+      const labelPx = Math.max(11, Math.min(14, unit * 0.24));
+      fontLabel = "600 " + Math.round(labelPx) + "px " + fontFamily;
+      const bwPx = Math.max(1, Math.round(w * nextDpr));
+      const bhPx = Math.max(1, Math.round(h * nextDpr));
+      if (surface.width !== bwPx || surface.height !== bhPx) {
+        surface.width = bwPx;
+        surface.height = bhPx;
+      }
+      bake(w, h, nextDpr);
+      cssW = w;
+      cssH = h;
+      dpr = nextDpr;
+      viewDirty = false;
+      builtCache = true;
+    }
+
+    function makeGlow(r: number, g: number, b: number) {
+      const c = document.createElement("canvas");
+      c.width = 128;
+      c.height = 128;
+      const x = c.getContext("2d");
+      if (!x) return c;
+      const rad = x.createRadialGradient(64, 64, 6, 64, 64, 62);
+      rad.addColorStop(0, "rgba(" + r + "," + g + "," + b + ",0.95)");
+      rad.addColorStop(1, "rgba(" + r + "," + g + "," + b + ",0)");
+      x.fillStyle = rad;
+      x.fillRect(0, 0, 128, 128);
+      return c;
+    }
+
+    function makeDocSprites() {
+      for (let v = 0; v < 3; v++) {
+        const c = document.createElement("canvas");
+        c.width = 180;
+        c.height = 220;
+        const g = c.getContext("2d");
+        if (!g) {
+          docSprites[v] = c;
+          continue;
+        }
+        g.translate(90, 128);
+        g.transform(1, 0.14, -0.32, 1, 0, 0);
+        g.fillStyle = "rgba(0,0,0,0.28)";
+        g.beginPath();
+        g.ellipse(6, 42, 36, 12, 0, 0, TAU);
+        g.fill();
+        roundRect(g, -40, -58, 80, 104, 8);
+        g.fillStyle = "#f4f0e6";
+        g.fill();
+        g.strokeStyle = "rgba(40,32,24,0.25)";
+        g.lineWidth = 2;
+        g.stroke();
+        g.strokeStyle = "rgba(70,62,52,0.45)";
+        g.lineWidth = 3;
+        g.beginPath();
+        for (let line = 0; line < 4; line++) {
+          g.moveTo(-24, -30 + line * 16);
+          g.lineTo(line === 3 ? 4 : 26, -30 + line * 16);
+        }
+        g.stroke();
+        g.fillStyle = DOC_COLORS[v];
+        roundRect(g, 16, -58, 24, 18, 4);
+        g.fill();
+        docSprites[v] = c;
+      }
+    }
+
+    function canSpawn() {
+      let flowing = 0;
+      for (let i = 0; i < docCount; i++) {
+        const d = docs[i];
+        if (d.dead || d.phase === "fade") continue;
+        flowing++;
+        if (d.u < stationU[1]) return false;
+      }
+      return flowing < 2;
+    }
+
+    function updateVisual(doc: Doc) {
+      let st = doc.phase === "hand" || doc.phase === "fade" ? 3 : doc.seg >> 1;
+      if (st > 3) st = 3;
+      doc.visual = st >= 2 ? 2 : st >= 1 ? 1 : 0;
+    }
+
+    function beginSeg(doc: Doc) {
+      const seg = doc.seg;
+      const move = (seg & 1) === 0;
+      const base = move ? MOVE[seg >> 1] : PROC[seg >> 1];
+      doc.dur = base;
+      doc.left = base;
+      if (move) {
+        doc.u0 = seg === 0 ? 0 : stationU[(seg >> 1) - 1];
+        doc.u1 = stationU[seg >> 1];
+      } else {
+        doc.u0 = stationU[seg >> 1];
+        doc.u1 = doc.u0;
+        doc.u = doc.u0;
+      }
+      updateVisual(doc);
+    }
+
+    function spawnAuto() {
+      if (docCount >= 8) return;
+      const doc = pool.pop();
+      if (!doc) return;
+      doc.dead = false;
+      doc.phase = "run";
+      doc.seg = 0;
+      doc.visual = 0;
+      doc.u = 0;
+      beginSeg(doc);
+      docs[docCount++] = doc;
+    }
+
+    function advance(doc: Doc) {
+      if (doc.phase === "run") {
+        if (doc.seg < 7) {
+          doc.seg += 1;
+          beginSeg(doc);
+          return;
+        }
+        doc.phase = "hand";
+        doc.dur = HAND;
+        doc.left = HAND;
+        doc.u = stationU[3];
+        updateVisual(doc);
+        return;
+      }
+      if (doc.phase === "hand") {
+        doc.phase = "fade";
+        doc.dur = 360;
+        doc.left = 360;
+        receiver.happy = 1.5;
+        return;
+      }
+      doc.dead = true;
+    }
+
+    function consume(doc: Doc, stepDt: number, motion: number) {
+      const chunk = stepDt * 1000 * motion;
+      const used = chunk > doc.left ? doc.left : chunk;
+      doc.left -= used;
+      if (doc.phase === "run") {
+        const dur = doc.dur > 0 ? doc.dur : 1;
+        const p = smooth(1 - doc.left / dur);
+        doc.u = doc.u0 + (doc.u1 - doc.u0) * p;
+      }
+      if (doc.left <= 0) advance(doc);
+    }
+
+    function blink(ch: Actor, raw: number) {
+      const rate = reduced ? 0.35 : 1;
+      if (ch.blink < 0) {
+        ch.eye = 1;
+        ch.wait -= raw * rate;
+        if (ch.wait <= 0) ch.blink = 0;
+      } else {
+        ch.blink += raw * rate;
+        if (ch.blink >= 0.13) {
+          ch.blink = -1;
+          ch.eye = 1;
+          ch.wait = reduced ? 5 + Math.random() * 3 : 2.1 + Math.random() * 3.4;
+        } else {
+          const p = ch.blink / 0.13;
+          ch.eye = p < 0.5 ? 1 - p * 2 : (p - 0.5) * 2;
+        }
+      }
+    }
+
+    function beginWalk() {
+      if (!canSpawn()) return false;
+      sender.phase = "toDrop";
+      sender.dur = 1.7;
+      sender.left = 1.7;
+      return true;
+    }
+
+    function updateActors(stepDt: number, motion: number, raw: number) {
+      const walking = sender.phase === "toDrop" || sender.phase === "toIdle";
+      if (walking) sender.step += stepDt * motion * 2.05;
+      else {
+        sender.step +=
+          (Math.round(sender.step) - sender.step) * Math.min(1, stepDt * 8);
+      }
+      sender.left -= stepDt * motion;
+      if (sender.phase === "idle" && sender.left <= 0) {
+        if (!beginWalk()) sender.left = 0.35;
+      } else if (sender.phase === "toDrop" && sender.left <= 0) {
+        sender.phase = "place";
+        sender.dur = 0.42;
+        sender.left = 0.42;
+      } else if (sender.phase === "place" && sender.left <= 0) {
+        spawnAuto();
+        sender.phase = "toIdle";
+        sender.dur = 1.45;
+        sender.left = 1.45;
+      } else if (sender.phase === "toIdle" && sender.left <= 0) {
+        sender.phase = "idle";
+        sender.dur = 0.45;
+        sender.left = 0.45;
+      }
+      blink(sender, raw);
+      blink(receiver, raw);
+      if (receiver.happy > 0) receiver.happy -= raw * (reduced ? 0.35 : 1);
+      let reachTarget = 0;
+      for (let i = 0; i < docCount; i++) {
+        const d = docs[i];
+        if (d.dead) continue;
+        if (d.phase === "hand" || d.phase === "fade" || (d.phase === "run" && d.seg >= 6)) {
+          reachTarget = 1;
+        }
+      }
+      const prev = receiver.reach;
+      receiver.reach =
+        prev + (reachTarget - prev) * Math.min(1, raw * motion * 6);
+      if (reachTarget && !walking) receiver.step += stepDt * motion * 1.2;
+    }
+
+    function affect(doc: Doc) {
+      if (doc.dead) return;
+      let idx = 0;
+      let amount = 0.4;
+      let mode = 0;
+      if (doc.phase === "hand" || doc.phase === "fade") {
+        idx = 3;
+        amount = 1;
+        mode = 3;
+      } else {
+        idx = doc.seg >> 1;
+        if (idx > 3) idx = 3;
+        amount = (doc.seg & 1) === 1 ? 1 : 0.55;
+        mode = doc.visual >= 2 ? 3 : 0;
+      }
+      const st = stations[idx];
+      if (amount > st.want) st.want = amount;
+      if (mode > st.wantMode) st.wantMode = mode;
+    }
+
+    function update(now: number) {
+      let raw = lastNow ? (now - lastNow) / 1000 : 0.016;
+      lastNow = now;
+      if (raw > 0.05) raw = 0.05;
+      if (raw < 0) raw = 0;
+      const motion = reduced ? 0.18 : 1;
+      if (!reduced) {
+        visT += raw;
+        if (visT > 1000) visT -= 1000;
+      }
+      updateActors(raw, motion, raw);
+      for (let i = 0; i < docCount; i++) {
+        const d = docs[i];
+        if (d.dead) continue;
+        consume(d, raw, motion);
+      }
+      let w = 0;
+      for (let j = 0; j < docCount; j++) {
+        const doc = docs[j];
+        if (doc.dead) pool.push(doc);
+        else docs[w++] = doc;
+      }
+      docCount = w;
+      for (let s = 0; s < 4; s++) {
+        stations[s].want = 0;
+        stations[s].wantMode = 0;
+      }
+      for (let k = 0; k < docCount; k++) affect(docs[k]);
+      const light = Math.min(1, raw * 7);
+      for (let n = 0; n < 4; n++) {
+        const st = stations[n];
+        st.heat += (st.want - st.heat) * light;
+        if (st.want > 0.2) st.mode = st.wantMode;
+      }
+      if (!reduced) {
+        dashPhase += raw * 14;
+        if (dashPhase > 800) dashPhase -= 800;
+      }
+    }
+
+    function actorFoot() {
+      let p = 0;
+      if (sender.phase === "toDrop") p = smooth(1 - sender.left / sender.dur);
+      else if (sender.phase === "place") p = 1;
+      else if (sender.phase === "toIdle") p = 1 - smooth(1 - sender.left / sender.dur);
+      scrX = senderIdleX + (senderDropX - senderIdleX) * p;
+      scrY = senderIdleY + (senderDropY - senderIdleY) * p;
+    }
+
+    function personHand(
+      x: number,
+      y: number,
+      face: number,
+      reach: number,
+      carry: number,
+      scale: number,
+      bob: number,
+    ) {
+      const hx = 12 + reach * 12 + carry * 10;
+      const hy = -34 + bob + reach * 14;
+      handX = x + hx * scale * face;
+      handY = y + hy * scale;
+    }
+
+    function docPosition(doc: Doc) {
+      if (doc.phase === "hand" || doc.phase === "fade") {
+        pathPoint(stationU[3]);
+        const ax = scrX;
+        const ay = scrY;
+        const reach = receiver.reach;
+        const rx = recvIdleX + (recvTakeX - recvIdleX) * reach;
+        const ry = recvIdleY + (recvTakeY - recvIdleY) * reach;
+        personHand(rx, ry, -1, reach > 0.65 ? reach : 0.65, 0, unit / 46, 0);
+        const dur = doc.dur > 0 ? doc.dur : 1;
+        const t = doc.phase === "fade" ? 1 : smooth(1 - doc.left / dur);
+        scrX = ax + (handX - ax) * t;
+        scrY = ay + (handY - ay) * t;
+        return;
+      }
+      pathPoint(doc.u);
+    }
+
+    function drawDashes() {
+      ctx.strokeStyle = "rgba(214,204,255,0.75)";
+      ctx.lineWidth = Math.max(1.4, unit * 0.035);
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      const shift = dashPhase % 8;
+      for (let i = shift; i < PATH_N - 1; i += 8) {
+        const j = (i | 0) * 2;
+        ctx.moveTo(PATH[j], PATH[j + 1]);
+        ctx.lineTo(PATH[j + 2], PATH[j + 3]);
+      }
+      ctx.stroke();
+    }
+
+    function drawInterior(s: number, heat: number) {
+      const x = stations[s].sx;
+      const y = stations[s].sy;
+      const k = unit * 0.16;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.globalAlpha = 0.4 + heat * 0.6;
+      ctx.strokeStyle = heat > 0.55 ? "#ffffff" : "#d6ccff";
+      ctx.fillStyle = heat > 0.55 ? "#ffffff" : "#d6ccff";
+      ctx.lineWidth = Math.max(1, unit * 0.03);
+      ctx.lineCap = "round";
+      if (s === 0) {
+        const p = reduced ? 0.45 : (visT * 0.8) % 1;
+        ctx.beginPath();
+        ctx.moveTo(-k, -k + p * k * 2);
+        ctx.lineTo(k, -k + p * k * 2);
+        ctx.stroke();
+      } else if (s === 1) {
+        const pulse = reduced ? 1 : 0.65 + Math.sin(visT * 3) * 0.35;
+        ctx.globalAlpha *= pulse;
+        ctx.beginPath();
+        ctx.moveTo(-k, 0);
+        ctx.lineTo(0, -k * 0.6);
+        ctx.lineTo(k, 0);
+        ctx.moveTo(0, -k * 0.6);
+        ctx.lineTo(0, k * 0.7);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(-k, 0, 2.2, 0, TAU);
+        ctx.arc(0, -k * 0.6, 2.2, 0, TAU);
+        ctx.arc(k, 0, 2.2, 0, TAU);
+        ctx.fill();
+      } else if (s === 2) {
+        ctx.beginPath();
+        ctx.arc(0, 2, k * 0.55, Math.PI, 0);
+        ctx.arc(-k * 0.45, 2, k * 0.38, Math.PI, 0);
+        ctx.arc(k * 0.48, 4, k * 0.36, Math.PI, 0);
+        ctx.stroke();
+      } else {
+        ctx.beginPath();
+        ctx.moveTo(-k * 0.45, 0);
+        ctx.lineTo(-k * 0.05, k * 0.4);
+        ctx.lineTo(k * 0.55, -k * 0.45);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawStationsLive() {
+      const names = tall ? ST_TALL : ST_WIDE;
+      for (let s = 0; s < 4; s++) {
+        const st = stations[s];
+        if (st.heat > 0.03) {
+          const sprite = glowSprites[st.mode] || glowSprites[0];
+          const size = unit * (2.4 + st.heat);
+          ctx.globalAlpha = 0.28 + st.heat * 0.45;
+          ctx.drawImage(sprite, st.sx - size * 0.5, st.sy - size * 0.5, size, size);
+          ctx.globalAlpha = 0.18 + st.heat * 0.28;
+          ctx.fillStyle = GLOW_COLORS[st.mode];
+          const o = s * 8;
+          ctx.beginPath();
+          ctx.moveTo(TOP[o], TOP[o + 1]);
+          ctx.lineTo(TOP[o + 2], TOP[o + 3]);
+          ctx.lineTo(TOP[o + 4], TOP[o + 5]);
+          ctx.lineTo(TOP[o + 6], TOP[o + 7]);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+        drawInterior(s, st.heat);
+        if (!reduced) {
+          const sheen = Math.sin(visT * 1.4 + s) * unit * 0.12;
+          ctx.globalAlpha = 0.18;
+          ctx.fillStyle = "#fff";
+          ctx.beginPath();
+          ctx.ellipse(
+            st.sx + sheen,
+            st.sy - unit * 0.08,
+            unit * 0.18,
+            unit * 0.07,
+            -0.5,
+            0,
+            TAU,
+          );
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+      }
+      ctx.globalAlpha = 1;
+      ctx.font = fontLabel;
+      ctx.textAlign = tall ? "left" : "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "#ddd6fe";
+      for (let n = 0; n < 4; n++) {
+        ctx.fillText(names[n], stations[n].lx, stations[n].ly);
+      }
+    }
+
+    function drawPaper(x: number, y: number, dw: number, visual: number, alpha: number) {
+      const sprite = docSprites[visual] || docSprites[0];
+      const dh = dw * (220 / 180);
+      ctx.globalAlpha = alpha;
+      ctx.drawImage(sprite, x - dw * 0.5, y - dh * 0.86, dw, dh);
+      ctx.globalAlpha = 1;
+    }
+
+    function drawPerson(
+      x: number,
+      y: number,
+      scale: number,
+      face: number,
+      ch: Actor,
+      carry: number,
+      reach: number,
+      walking: number,
+    ) {
+      const idle = 1 - (walking > 1 ? 1 : walking);
+      const breath = reduced ? 0 : Math.sin(visT * 1.7 + (face > 0 ? 0 : 1.3)) * idle * 1.15;
+      const bob =
+        breath + (walking > 0.2 ? Math.abs(Math.sin(ch.step * TAU)) * -2.5 : 0);
+      const lean = reduced
+        ? 0
+        : Math.sin(visT * 0.9 + ch.step) * (walking > 0.2 ? 0.4 : 1.3);
+      personHand(x + lean, y, face, reach, carry, scale, bob);
+      ctx.save();
+      ctx.translate(x + lean, y);
+      ctx.scale(scale * face, scale);
+      ctx.fillStyle = "rgba(0,0,0,0.4)";
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 16, 6, 0, 0, TAU);
+      ctx.fill();
+      const swing = Math.sin(ch.step * TAU) * (0.25 + (walking > 1 ? 1 : walking) * 0.75);
+      ctx.strokeStyle = "#6d6484";
+      ctx.lineWidth = 4.2;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(-4, -24 + bob);
+      ctx.lineTo(-3.5 + swing * 5, -1);
+      ctx.moveTo(3.5, -24 + bob);
+      ctx.lineTo(3.5 - swing * 5, -1);
+      ctx.stroke();
+      roundRect(ctx, -11, -46 + bob, 22, 24, 7);
+      ctx.fillStyle = "#1b1726";
+      ctx.fill();
+      ctx.fillStyle = "#8B5CF6";
+      roundRect(ctx, -11, -46 + bob, 22, 5.5, 3);
+      ctx.fill();
+      const hy = -40 + bob;
+      const hx = 12 + reach * 12 + carry * 10;
+      const hand = -34 + bob + reach * 14;
+      ctx.strokeStyle = "#1b1726";
+      ctx.lineWidth = 3.6;
+      ctx.beginPath();
+      ctx.moveTo(-8, hy);
+      ctx.lineTo(-14 - swing * 6, -22 + bob);
+      ctx.moveTo(8, hy);
+      ctx.lineTo(hx, hand);
+      ctx.stroke();
+      ctx.fillStyle = "#f0c9a0";
+      ctx.beginPath();
+      ctx.arc(hx, hand, 2.4, 0, TAU);
+      ctx.fill();
+      const headY = -58 + bob;
+      ctx.fillStyle = "#241833";
+      ctx.beginPath();
+      ctx.arc(0, headY - 1, 10.6, 0, TAU);
+      ctx.fill();
+      ctx.fillStyle = "#f0c9a0";
+      ctx.beginPath();
+      ctx.arc(0, headY + 2.4, 8.4, 0, TAU);
+      ctx.fill();
+      if (ch.eye < 0.22) {
+        ctx.strokeStyle = "#3a241c";
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(-5.2, headY + 1.5);
+        ctx.lineTo(-2.1, headY + 1.5);
+        ctx.moveTo(2.1, headY + 1.5);
+        ctx.lineTo(5.2, headY + 1.5);
+        ctx.stroke();
+      } else {
+        ctx.fillStyle = "#2a1a16";
+        ctx.beginPath();
+        ctx.ellipse(-3.5, headY + 1.4, 1.25, 1.65 * ch.eye, 0, 0, TAU);
+        ctx.ellipse(3.5, headY + 1.4, 1.25, 1.65 * ch.eye, 0, 0, TAU);
+        ctx.fill();
+      }
+      if (ch.happy > 0.08) {
+        ctx.strokeStyle = "#8d5b48";
+        ctx.lineWidth = 1.15;
+        ctx.beginPath();
+        ctx.arc(0, headY + 4.2, 3, 0.15, 3);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawSender(x: number, y: number, scale: number) {
+      const carry =
+        sender.phase === "toDrop"
+          ? 1
+          : sender.phase === "place"
+            ? sender.left / sender.dur
+            : 0;
+      const reach = sender.phase === "place" ? 1 - sender.left / sender.dur : 0;
+      const face = sender.phase === "toIdle" ? -1 : 1;
+      const walking = sender.phase === "toDrop" || sender.phase === "toIdle" ? 1 : 0;
+      drawPerson(x, y, scale, face, sender, carry, reach, walking);
+      if (carry > 0.04) {
+        drawPaper(handX + unit * 0.18, handY + unit * 0.16, unit * 0.5, 0, carry);
+      }
+    }
+
+    function drawReceiver(x: number, y: number, scale: number) {
+      const reach = receiver.reach;
+      drawPerson(x, y, scale, -1, receiver, 0, reach, reach);
+    }
+
+    function drawDoc(doc: Doc, x: number, y: number) {
+      let alpha = 1;
+      if (doc.phase === "fade") {
+        alpha = doc.left > 0 ? doc.left / doc.dur : 0;
+      }
+      drawPaper(x, y, unit * 0.9, doc.visual, alpha);
+    }
+
+    function drawEntities() {
+      let n = 0;
+      actorFoot();
+      EX[n] = scrX;
+      EY[n] = scrY;
+      ETYPE[n] = 0;
+      n++;
+      const reach = receiver.reach;
+      EX[n] = recvIdleX + (recvTakeX - recvIdleX) * reach;
+      EY[n] = recvIdleY + (recvTakeY - recvIdleY) * reach;
+      ETYPE[n] = 1;
+      n++;
+      for (let i = 0; i < docCount; i++) {
+        const d = docs[i];
+        if (d.dead) continue;
+        docPosition(d);
+        EX[n] = scrX;
+        EY[n] = scrY;
+        ETYPE[n] = 2;
+        EID[n] = i;
+        n++;
+      }
+      for (let a = 0; a < n; a++) order[a] = a;
+      for (let p = 1; p < n; p++) {
+        const key = order[p];
+        let q = p - 1;
+        while (q >= 0 && EY[order[q]] > EY[key]) {
+          order[q + 1] = order[q];
+          q--;
+        }
+        order[q + 1] = key;
+      }
+      const scale = unit / 46;
+      for (let e = 0; e < n; e++) {
+        const id = order[e];
+        const kind = ETYPE[id];
+        if (kind === 0) drawSender(EX[id], EY[id], scale);
+        else if (kind === 1) drawReceiver(EX[id], EY[id], scale);
+        else drawDoc(docs[EID[id]], EX[id], EY[id]);
+      }
+    }
+
+    function draw() {
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.fillStyle = BG;
+      ctx.fillRect(0, 0, cssW, cssH);
+      if (floorCache) ctx.drawImage(floorCache, 0, 0, cssW, cssH);
+      drawDashes();
+      drawStationsLive();
+      drawEntities();
+    }
+
+    function record(elapsed: number) {
+      if (workCount < workRing.length) {
+        workRing[workCount] = elapsed;
+        workSum += elapsed;
+        workCount++;
+      } else {
+        workSum -= workRing[workIdx];
+        workRing[workIdx] = elapsed;
+        workSum += elapsed;
+        workIdx = (workIdx + 1) % workRing.length;
+      }
+      workAvg = workSum / (workCount < workRing.length ? workCount : workRing.length);
+      if (elapsed > workMax) workMax = elapsed;
+      if ((frameIndex & 63) === 0) {
+        const meter = stage as HTMLDivElement & { frameMs?: number; frameMax?: number };
+        meter.frameMs = workAvg;
+        meter.frameMax = workMax;
+      }
+    }
+
+    function frame(now: number) {
+      if (!looping || disposed) return;
+      frameIndex++;
+      layoutThisFrame = false;
+      if (viewDirty || (frameIndex & 63) === 0) {
+        const rw = stage.clientWidth;
+        const rh = stage.clientHeight;
+        const rd = Math.min(2, window.devicePixelRatio || 1);
+        if (viewDirty || rw !== cssW || rh !== cssH || Math.abs(rd - dpr) > 0.01) {
+          layout();
+        }
+      }
+      if (builtCache) {
+        const t0 = performance.now();
+        update(now);
+        draw();
+        const elapsed = performance.now() - t0;
+        if (frameIndex > 25 && !layoutThisFrame) record(elapsed);
+      }
+      if (looping && !disposed) raf = requestAnimationFrame(frame);
+    }
+
+    function syncLoop() {
+      const should = onScreen && !hidden && !disposed;
+      if (should && !looping) {
+        looping = true;
+        lastNow = 0;
+        raf = requestAnimationFrame(frame);
+      } else if (!should && looping) {
+        looping = false;
+        cancelAnimationFrame(raf);
+        raf = 0;
+      }
+    }
+
+    function onVis() {
+      hidden = document.hidden;
+      syncLoop();
+    }
+
+    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    function onMotion() {
+      reduced = motionQuery.matches;
+    }
+
+    glowSprites[0] = makeGlow(139, 92, 246);
+    glowSprites[1] = makeGlow(245, 193, 108);
+    glowSprites[2] = makeGlow(240, 113, 120);
+    glowSprites[3] = makeGlow(125, 220, 176);
+    makeDocSprites();
+    layout();
+    if (builtCache) draw();
+
+    const rect = host.getBoundingClientRect();
+    onScreen = rect.bottom > 0 && rect.top < window.innerHeight && rect.width > 0;
+    hidden = document.hidden;
+
+    const ro = new ResizeObserver(() => {
+      viewDirty = true;
+    });
+    ro.observe(host);
+    const io = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        onScreen = !!entry && entry.isIntersecting;
+        syncLoop();
+      },
+      { threshold: 0 },
+    );
+    io.observe(host);
+    document.addEventListener("visibilitychange", onVis);
+    if (motionQuery.addEventListener) motionQuery.addEventListener("change", onMotion);
+    syncLoop();
+
+    return () => {
+      disposed = true;
+      looping = false;
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+      io.disconnect();
+      document.removeEventListener("visibilitychange", onVis);
+      if (motionQuery.removeEventListener) {
+        motionQuery.removeEventListener("change", onMotion);
+      }
+    };
+  }, []);
+
+  return (
+    <div
+      ref={hostRef}
+      aria-hidden="true"
+      className="relative h-[420px] w-full min-w-0 max-w-full overflow-hidden sm:h-[480px] lg:h-[560px]"
+    >
+      <canvas ref={canvasRef} className="pointer-events-none block h-full w-full" />
+    </div>
+  );
+}
