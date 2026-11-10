@@ -153,7 +153,6 @@ export default function HeroCommandCenter() {
     let BOXH = 1.08;
     let scrX = 0;
     let scrY = 0;
-    let visT = 0;
     let dashPhase = 0;
     let lastNow = 0;
     let frameIndex = 0;
@@ -864,10 +863,6 @@ export default function HeroCommandCenter() {
       if (raw > 0.05) raw = 0.05;
       if (raw < 0) raw = 0;
       const motion = reduced ? 0.18 : 1;
-      if (!reduced) {
-        visT += raw;
-        if (visT > 1000) visT -= 1000;
-      }
       updateSpawn(raw, motion);
       for (let i = 0; i < docCount; i++) {
         const d = docs[i];
@@ -953,24 +948,6 @@ export default function HeroCommandCenter() {
           ctx.lineTo(TOP[o + 6], TOP[o + 7]);
           ctx.closePath();
           ctx.fill();
-        }
-        ctx.globalAlpha = 1;
-        if (!reduced) {
-          const sheen = Math.sin(visT * 1.4 + s) * unit * 0.12;
-          ctx.globalAlpha = 0.18;
-          ctx.fillStyle = "#fff";
-          ctx.beginPath();
-          ctx.ellipse(
-            st.sx + sheen,
-            st.sy - unit * 0.08,
-            unit * 0.18,
-            unit * 0.07,
-            -0.5,
-            0,
-            TAU,
-          );
-          ctx.fill();
-          ctx.globalAlpha = 1;
         }
       }
       ctx.globalAlpha = 1;
