@@ -3,32 +3,32 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Hero portrait of the command-center pipeline.
- * Canvas only: documents and four glass stations.
- * Station tops stay blank. Labels sit above the cubes.
- * A document materializes at intake, rides the belt, and fades into the tray.
- * The loop is automatic. There are no controls, counts, or panels.
+ * Hero portrait of the pipeline.
+ * Three glass cubes sit on an isometric triangle: Intake, AI processing, Delivery.
+ * Belts run the triangle edges. A document appears at intake, is processed at AI,
+ * lands in the green tray, fades, and the loop starts again.
+ * Cube tops stay blank. Labels sit above the cubes. There are no people.
  */
 
-const MOVE = new Float32Array([700, 1000, 1000, 900]);
-const PROC = new Float32Array([900, 1100, 1000, 900]);
-const ARRIVE = 560;
-const DELIVER = 760;
-const FADE = 440;
+const ARRIVE = 480;
+const DELIVER = 700;
+const FADE = 420;
+const STEP_MS = new Float32Array([440, 1000, 1160, 1000]);
 const COS = Math.cos(Math.PI / 6);
 const SIN = Math.sin(Math.PI / 6);
 const PATH_N = 96;
 const TAU = Math.PI * 2;
-const ST_WIDE = ["Intake", "AI processing", "Cloud validation", "Delivery"];
-const ST_TALL = ["Intake", "AI", "Cloud", "Delivery"];
-const GLOW_COLORS = ["#8B5CF6", "#F5C16C", "#F07178", "#7DDCB0"];
+const ST_N = 3;
+const ST_WIDE = ["Intake", "AI processing", "Delivery"];
+const ST_TALL = ["Intake", "AI", "Delivery"];
+const GLOW_COLORS = ["#8B5CF6", "#F5C16C", "#7DDCB0"];
 const DOC_COLORS = ["#8a8478", "#7c6bb5", "#2f9d6b"];
 const BG = "#0A0A0B";
 
 interface Doc {
   dead: boolean;
   phase: "arrive" | "run" | "deliver" | "fade";
-  seg: number;
+  step: number;
   left: number;
   dur: number;
   u: number;
@@ -52,7 +52,7 @@ function createDoc(): Doc {
   return {
     dead: true,
     phase: "run",
-    seg: 0,
+    step: 0,
     left: 1,
     dur: 1,
     u: 0,
@@ -96,15 +96,10 @@ export default function HeroCommandCenter() {
     let hidden = document.hidden;
     let reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    const stations: Station[] = [
-      createStation(),
-      createStation(),
-      createStation(),
-      createStation(),
-    ];
+    const stations: Station[] = [createStation(), createStation(), createStation()];
     const pool: Doc[] = [];
-    for (let i = 0; i < 8; i++) pool.push(createDoc());
-    const docs: Doc[] = new Array(8);
+    for (let i = 0; i < 6; i++) pool.push(createDoc());
+    const docs: Doc[] = new Array(6);
     let docCount = 0;
 
     let cssW = 0;
@@ -113,7 +108,7 @@ export default function HeroCommandCenter() {
     let unit = 40;
     let originX = 0;
     let originY = 0;
-    let tall = false;
+    let short = false;
     let viewDirty = true;
     let builtCache = false;
     let layoutThisFrame = false;
@@ -121,36 +116,41 @@ export default function HeroCommandCenter() {
     const fontFamily =
       getComputedStyle(document.body).fontFamily || "Inter, sans-serif";
 
-    const stationU = new Float32Array(4);
+    const stationU = new Float32Array(ST_N);
     const PATH = new Float32Array(PATH_N * 2);
-    const beltGx = new Float32Array(5);
-    const beltGy = new Float32Array(5);
-    const stGx = new Float32Array(4);
-    const stGy = new Float32Array(4);
-    const px5 = new Float32Array(5);
-    const py5 = new Float32Array(5);
-    const pl5 = new Float32Array(5);
+    const beltGx = new Float32Array(ST_N);
+    const beltGy = new Float32Array(ST_N);
+    const stGx = new Float32Array(ST_N);
+    const stGy = new Float32Array(ST_N);
+    const inX = new Float32Array(ST_N);
+    const inY = new Float32Array(ST_N);
+    const outX = new Float32Array(ST_N);
+    const outY = new Float32Array(ST_N);
+    const px3 = new Float32Array(ST_N);
+    const py3 = new Float32Array(ST_N);
+    const pl3 = new Float32Array(ST_N);
     const C = new Float32Array(16);
-    const TOP = new Float32Array(32);
-    const EX = new Float32Array(8);
-    const EY = new Float32Array(8);
-    const EID = new Int8Array(8);
-    const order = new Int8Array(8);
+    const TOP = new Float32Array(ST_N * 8);
+    const EX = new Float32Array(6);
+    const EY = new Float32Array(6);
+    const EID = new Int8Array(6);
+    const order = new Int8Array(6);
+    const cubeOrder = new Int8Array([1, 0, 2]);
 
     let lipX = 0;
     let lipY = 0;
-    let lipW = 0.9;
-    let lipD = 0.72;
+    let lipW = 1.08;
+    let lipD = 0.9;
     let trayX = 0;
     let trayY = 0;
-    let trayW = 0.95;
-    let trayD = 0.72;
+    let trayW = 1.08;
+    let trayD = 0.9;
     const slabH = 0.09;
     let trayScrX = 0;
     let trayScrY = 0;
-    let spawnLeft = 0.28;
-    let BOX = 1.28;
-    let BOXH = 1.08;
+    let spawnLeft = 0.2;
+    let BOX = 1.24;
+    let BOXH = 1.04;
     let scrX = 0;
     let scrY = 0;
     let dashPhase = 0;
@@ -167,7 +167,7 @@ export default function HeroCommandCenter() {
     let floorCache: HTMLCanvasElement | null = null;
     let floorCtx: CanvasRenderingContext2D | null = null;
     const docSprites: HTMLCanvasElement[] = new Array(3);
-    const glowSprites: HTMLCanvasElement[] = new Array(4);
+    const glowSprites: HTMLCanvasElement[] = new Array(3);
 
     function project(
       gx: number,
@@ -185,6 +185,14 @@ export default function HeroCommandCenter() {
       scrY = originY + (gx + gy) * SIN * unit - gz * unit;
     }
 
+    function gridX(sx: number, sy: number) {
+      return (sy / SIN + sx / COS) * 0.5;
+    }
+
+    function gridY(sx: number, sy: number) {
+      return (sy / SIN - sx / COS) * 0.5;
+    }
+
     function pathPoint(u: number) {
       let t = u;
       if (t < 0) t = 0;
@@ -200,15 +208,6 @@ export default function HeroCommandCenter() {
       const k = j + 2;
       scrX = PATH[j] + (PATH[k] - PATH[j]) * frac;
       scrY = PATH[j + 1] + (PATH[k + 1] - PATH[j + 1]) * frac;
-    }
-
-    function polyPoint(dist: number) {
-      let i = 1;
-      while (i < 4 && pl5[i] < dist) i++;
-      const span = pl5[i] - pl5[i - 1] || 1;
-      const t = (dist - pl5[i - 1]) / span;
-      scrX = px5[i - 1] + (px5[i] - px5[i - 1]) * t;
-      scrY = py5[i - 1] + (py5[i] - py5[i - 1]) * t;
     }
 
     function clamp01(t: number) {
@@ -249,43 +248,96 @@ export default function HeroCommandCenter() {
     }
 
     function fillGrid() {
-      BOX = tall ? 0.9 : 1.28;
-      BOXH = tall ? 0.74 : 1.08;
-      if (!tall) {
-        for (let i = 0; i < 5; i++) {
-          beltGx[i] = i * 2.55;
-          beltGy[i] = 0;
-        }
-        for (let s = 0; s < 4; s++) {
-          stGx[s] = beltGx[s + 1] - 0.64;
-          stGy[s] = -1.62;
-        }
-        lipW = 1.15;
-        lipD = 0.95;
-        lipX = -0.85;
-        lipY = -0.18;
-        trayW = 1.15;
-        trayD = 0.95;
-        trayX = beltGx[4] + 0.72;
-        trayY = -0.18;
-      } else {
-        for (let j = 0; j < 5; j++) {
-          beltGx[j] = j * 2.15;
-          beltGy[j] = j * 2.15;
-        }
-        for (let k = 0; k < 4; k++) {
-          stGx[k] = beltGx[k + 1] + 0.02;
-          stGy[k] = beltGy[k + 1] - (BOX + 0.28);
-        }
-        lipW = 0.72;
-        lipD = 0.72;
-        lipX = -0.92;
-        lipY = -0.92;
-        trayW = 0.78;
-        trayD = 0.78;
-        trayX = beltGx[4] + 0.48;
-        trayY = beltGy[4] + 0.48;
+      BOX = 1.24;
+      BOXH = 1.04;
+      const side = 4.7;
+      const h = side * Math.sqrt(3) * 0.5;
+      const nsx = [-side * 0.5, 0, side * 0.5];
+      const nsy = [h, 0, h];
+      for (let i = 0; i < ST_N; i++) {
+        beltGx[i] = gridX(nsx[i], nsy[i]);
+        beltGy[i] = gridY(nsx[i], nsy[i]);
       }
+
+      const csy = h * (2 / 3);
+      const lift = 1.02;
+      const nudge = 0.14;
+      for (let i = 0; i < ST_N; i++) {
+        const dx = nsx[i];
+        const dy = nsy[i] - csy;
+        const len = Math.hypot(dx, dy) || 1;
+        const ox = dx / len;
+        const up = i === 1 ? lift + 0.16 : lift;
+        const csx = nsx[i] + ox * nudge;
+        const cubeSy = nsy[i] - up;
+        stGx[i] = gridX(csx, cubeSy) - BOX * 0.5;
+        stGy[i] = gridY(csx, cubeSy) - BOX * 0.5;
+      }
+
+      const extend = 0.92;
+      const backX = -0.5;
+      const backY = Math.sqrt(3) * 0.5;
+      lipW = 1.12;
+      lipD = 0.94;
+      trayW = 1.12;
+      trayD = 0.94;
+      const lipAt = placeOrigin(
+        nsx[0] + backX * extend,
+        nsy[0] + backY * extend,
+        lipW,
+        lipD,
+      );
+      lipX = lipAt[0];
+      lipY = lipAt[1];
+      const trayAt = placeOrigin(
+        nsx[2] - backX * extend,
+        nsy[2] + backY * extend,
+        trayW,
+        trayD,
+      );
+      trayX = trayAt[0];
+      trayY = trayAt[1];
+
+      const hw = 0.38;
+      const cap = hw * 1.85;
+      for (let i = 0; i < ST_N; i++) {
+        const i0 = (i + ST_N - 1) % ST_N;
+        const i2 = (i + 1) % ST_N;
+        const d1x = beltGx[i] - beltGx[i0];
+        const d1y = beltGy[i] - beltGy[i0];
+        const d2x = beltGx[i2] - beltGx[i];
+        const d2y = beltGy[i2] - beltGy[i];
+        const l1 = Math.hypot(d1x, d1y) || 1;
+        const l2 = Math.hypot(d2x, d2y) || 1;
+        const n1x = -d1y / l1;
+        const n1y = d1x / l1;
+        const n2x = -d2y / l2;
+        const n2y = d2x / l2;
+        let bx = n1x + n2x;
+        let by = n1y + n2y;
+        let bl = Math.hypot(bx, by);
+        if (bl < 1e-4) {
+          bx = n1x;
+          by = n1y;
+          bl = 1;
+        }
+        bx /= bl;
+        by /= bl;
+        const denom = bx * n1x + by * n1y;
+        let m = hw / (Math.abs(denom) < 0.22 ? (denom < 0 ? -0.22 : 0.22) : denom);
+        if (m > cap) m = cap;
+        else if (m < -cap) m = -cap;
+        inX[i] = beltGx[i] + bx * m;
+        inY[i] = beltGy[i] + by * m;
+        outX[i] = beltGx[i] - bx * m;
+        outY[i] = beltGy[i] - by * m;
+      }
+    }
+
+    function placeOrigin(sx: number, sy: number, w: number, d: number) {
+      const gx = gridX(sx, sy);
+      const gy = gridY(sx, sy);
+      return [gx - w * 0.5, gy - d * 0.5];
     }
 
     function paintStation(g: CanvasRenderingContext2D, s: number) {
@@ -313,12 +365,6 @@ export default function HeroCommandCenter() {
       TOP[base + 7] = C[15];
       stations[s].sx = (C[8] + C[10] + C[12] + C[14]) * 0.25;
       stations[s].sy = (C[9] + C[11] + C[13] + C[15]) * 0.25;
-      let maxY = C[1];
-      for (let i = 0; i < 8; i += 2) {
-        if (C[i + 1] > maxY) maxY = C[i + 1];
-      }
-      stations[s].lx = (C[0] + C[2] + C[4] + C[6]) * 0.25;
-      stations[s].ly = maxY + Math.max(14, unit * 0.28);
       g.fillStyle = "rgba(42,32,68,0.96)";
       g.beginPath();
       g.moveTo(C[2], C[3]);
@@ -434,6 +480,66 @@ export default function HeroCommandCenter() {
       g.fill();
     }
 
+    function paintBelt(g: CanvasRenderingContext2D, i: number, j: number) {
+      project(outX[i], outY[i], 0.03, C, 0);
+      project(outX[j], outY[j], 0.03, C, 2);
+      project(inX[j], inY[j], 0.03, C, 4);
+      project(inX[i], inY[i], 0.03, C, 6);
+      g.fillStyle = "#1a1526";
+      trace(g, 0);
+      g.fill();
+      g.strokeStyle = "rgba(196,181,253,0.28)";
+      g.lineWidth = 1;
+      g.stroke();
+      project(outX[i], outY[i], 0.11, C, 0);
+      project(outX[j], outY[j], 0.11, C, 2);
+      project(inX[j], inY[j], 0.11, C, 4);
+      project(inX[i], inY[i], 0.11, C, 6);
+      g.fillStyle = "#241c33";
+      trace(g, 0);
+      g.fill();
+      g.strokeStyle = "rgba(226,214,255,0.35)";
+      g.lineWidth = 1.25;
+      g.stroke();
+    }
+
+    function tileNear(px: number, py: number) {
+      const x0 = beltGx[0];
+      const y0 = beltGy[0];
+      const x1 = beltGx[1];
+      const y1 = beltGy[1];
+      const x2 = beltGx[2];
+      const y2 = beltGy[2];
+      const d = (y1 - y2) * (x0 - x2) + (x2 - x1) * (y0 - y2);
+      const inv = 1 / (d || 1);
+      const a = ((y1 - y2) * (px - x2) + (x2 - x1) * (py - y2)) * inv;
+      const b = ((y2 - y0) * (px - x2) + (x0 - x2) * (py - y2)) * inv;
+      const c = 1 - a - b;
+      if (a >= -0.04 && b >= -0.04 && c >= -0.04) return true;
+      if (segNear(px, py, x0, y0, x1, y1)) return true;
+      if (segNear(px, py, x1, y1, x2, y2)) return true;
+      return segNear(px, py, x2, y2, x0, y0);
+    }
+
+    function segNear(
+      px: number,
+      py: number,
+      ax: number,
+      ay: number,
+      bx: number,
+      by: number,
+    ) {
+      const dx = bx - ax;
+      const dy = by - ay;
+      const l2 = dx * dx + dy * dy || 1;
+      let t = ((px - ax) * dx + (py - ay) * dy) / l2;
+      if (t < 0) t = 0;
+      else if (t > 1) t = 1;
+      const qx = ax + dx * t;
+      const qy = ay + dy * t;
+      return (px - qx) * (px - qx) + (py - qy) * (py - qy) < 1.6;
+    }
+
     function bake(w: number, h: number, ratio: number) {
       const bw = Math.max(1, Math.round(w * ratio));
       const bh = Math.max(1, Math.round(h * ratio));
@@ -452,22 +558,24 @@ export default function HeroCommandCenter() {
       g.setTransform(ratio, 0, 0, ratio, 0, 0);
       g.fillStyle = BG;
       g.fillRect(0, 0, w, h);
-      pathPoint(0.5);
+      const glowGx = (beltGx[0] + beltGx[1] + beltGx[2]) / 3;
+      const glowGy = (beltGy[0] + beltGy[1] + beltGy[2]) / 3;
+      projectXY(glowGx, glowGy, 0);
       const glow = g.createRadialGradient(
         scrX,
         scrY,
         unit * 0.4,
         scrX,
         scrY,
-        unit * 7.5,
+        unit * 6.8,
       );
       glow.addColorStop(0, "rgba(139,92,246,0.18)");
       glow.addColorStop(1, "rgba(139,92,246,0)");
       g.fillStyle = glow;
       g.fillRect(0, 0, w, h);
       g.lineWidth = 1;
-      for (let gy = -8; gy <= 16; gy++) {
-        for (let gx = -8; gx <= 16; gx++) {
+      for (let gy = -6; gy <= 14; gy++) {
+        for (let gx = -6; gx <= 14; gx++) {
           project(gx, gy, 0, C, 0);
           project(gx + 1, gy, 0, C, 2);
           project(gx + 1, gy + 1, 0, C, 4);
@@ -480,7 +588,7 @@ export default function HeroCommandCenter() {
           ) {
             continue;
           }
-          const near = tall ? Math.abs(gx - gy) <= 1 : gy >= -1 && gy <= 1;
+          const near = tileNear(gx + 0.5, gy + 0.5);
           const alt = (gx + gy) & 1;
           g.fillStyle = near
             ? alt
@@ -500,74 +608,30 @@ export default function HeroCommandCenter() {
       fadeEdges(g, w, h);
 
       g.lineJoin = "round";
-      paintSlab(
-        g,
-        lipX,
-        lipY,
-        lipW,
-        lipD,
-        slabH,
-        "rgba(167,139,250,0.36)",
-      );
-      const hw = 0.34;
-      for (let seg = 0; seg < 4; seg++) {
-        const x0 = beltGx[seg];
-        const y0 = beltGy[seg];
-        const x1 = beltGx[seg + 1];
-        const y1 = beltGy[seg + 1];
-        const dx = x1 - x0;
-        const dy = y1 - y0;
-        const len = Math.hypot(dx, dy) || 1;
-        const nx = (-dy / len) * hw;
-        const ny = (dx / len) * hw;
-        project(x0 + nx, y0 + ny, 0.02, C, 0);
-        project(x1 + nx, y1 + ny, 0.02, C, 2);
-        project(x1 - nx, y1 - ny, 0.02, C, 4);
-        project(x0 - nx, y0 - ny, 0.02, C, 6);
-        g.fillStyle = "#1a1526";
-        trace(g, 0);
-        g.fill();
-        g.strokeStyle = "rgba(196,181,253,0.28)";
-        g.lineWidth = 1;
-        g.stroke();
-        project(x0 + nx, y0 + ny, 0.1, C, 0);
-        project(x1 + nx, y1 + ny, 0.1, C, 2);
-        project(x1 - nx, y1 - ny, 0.1, C, 4);
-        project(x0 - nx, y0 - ny, 0.1, C, 6);
-        g.fillStyle = "#241c33";
-        trace(g, 0);
-        g.fill();
-        g.strokeStyle = "rgba(226,214,255,0.35)";
-        g.lineWidth = 1.25;
-        g.stroke();
-      }
-      for (let s = 0; s < 4; s++) paintStation(g, s);
-      paintSlab(
-        g,
-        trayX,
-        trayY,
-        trayW,
-        trayD,
-        slabH,
-        "rgba(125,220,176,0.3)",
-      );
+      paintBelt(g, 0, 1);
+      paintBelt(g, 1, 2);
+      paintBelt(g, 2, 0);
+      paintSlab(g, lipX, lipY, lipW, lipD, slabH, "rgba(167,139,250,0.36)");
+      for (let s = 0; s < ST_N; s++) paintStation(g, cubeOrder[s]);
+      paintSlab(g, trayX, trayY, trayW, trayD, slabH, "rgba(125,220,176,0.3)");
       paintPadGlow(g, lipX + lipW * 0.5, lipY + lipD * 0.5, "139,92,246");
       paintPadGlow(g, trayX + trayW * 0.5, trayY + trayD * 0.5, "125,220,176");
-      if (tall) {
-        for (let lab = 0; lab < 4; lab++) {
-          stations[lab].lx = stations[lab].sx + unit * 0.72;
-          stations[lab].ly = stations[lab].sy - unit * 0.02;
+
+      for (let s = 0; s < ST_N; s++) {
+        const base = s * 8;
+        let topY = TOP[base + 1];
+        let cx = 0;
+        for (let k = 0; k < 8; k += 2) {
+          cx += TOP[base + k];
+          if (TOP[base + k + 1] < topY) topY = TOP[base + k + 1];
         }
-      } else {
-        for (let lab = 0; lab < 4; lab++) {
-          stations[lab].lx = stations[lab].sx;
-          stations[lab].ly = stations[lab].sy - unit * 0.9;
-        }
+        stations[s].lx = cx * 0.25;
+        stations[s].ly = topY - Math.max(4, unit * 0.08);
       }
     }
 
     function fadeEdges(g: CanvasRenderingContext2D, w: number, h: number) {
-      const m = Math.max(48, Math.min(96, Math.min(w, h) * 0.18));
+      const m = Math.max(22, Math.min(48, Math.min(w, h) * 0.07));
       const solid = "rgba(10,10,11,1)";
       const clear = "rgba(10,10,11,0)";
       const left = g.createLinearGradient(0, 0, m, 0);
@@ -598,7 +662,7 @@ export default function HeroCommandCenter() {
       const h = stage.clientHeight;
       const nextDpr = Math.min(2, window.devicePixelRatio || 1);
       if (w < 2 || h < 2) return;
-      tall = w < 520;
+      short = w < 520;
       fillGrid();
       let minX = 1e9;
       let minY = 1e9;
@@ -612,12 +676,14 @@ export default function HeroCommandCenter() {
         if (x > maxX) maxX = x;
         if (y > maxY) maxY = y;
       }
-      for (let i = 0; i < 5; i++) consider(beltGx[i], beltGy[i]);
-      for (let s = 0; s < 4; s++) {
-        consider(stGx[s], stGy[s]);
-        consider(stGx[s] + BOX, stGy[s]);
-        consider(stGx[s], stGy[s] + BOX);
-        consider(stGx[s] + BOX, stGy[s] + BOX);
+      for (let i = 0; i < ST_N; i++) {
+        consider(beltGx[i], beltGy[i]);
+        consider(inX[i], inY[i]);
+        consider(outX[i], outY[i]);
+        consider(stGx[i], stGy[i]);
+        consider(stGx[i] + BOX, stGy[i]);
+        consider(stGx[i], stGy[i] + BOX);
+        consider(stGx[i] + BOX, stGy[i] + BOX);
       }
       consider(lipX, lipY);
       consider(lipX + lipW, lipY);
@@ -629,12 +695,12 @@ export default function HeroCommandCenter() {
       consider(trayX + trayW, trayY + trayD);
       const bw = maxX - minX;
       const bh = maxY - minY;
-      const padX = tall ? 18 : 28;
-      const padTop = tall ? 20 : 22;
-      const padBot = tall ? 22 : 28;
-      const head = tall ? 1.2 : 1.72;
+      const padX = short ? 18 : 32;
+      const padTop = short ? 16 : 18;
+      const padBot = short ? 16 : 20;
+      const head = BOXH + 0.72;
       unit = Math.min((w - padX * 2) / bw, (h - padTop - padBot) / (bh + head));
-      const unitCap = tall ? 48 : 58;
+      const unitCap = short ? 54 : 64;
       if (unit > unitCap) unit = unitCap;
       if (unit < 16) unit = 16;
       originX = padX + (w - padX * 2 - bw * unit) / 2 - minX * unit;
@@ -643,24 +709,28 @@ export default function HeroCommandCenter() {
         head * unit +
         ((h - padTop - padBot) - (bh + head) * unit) / 2 -
         minY * unit;
-      for (let b = 0; b < 5; b++) {
+      for (let b = 0; b < ST_N; b++) {
         projectXY(beltGx[b], beltGy[b], 0.12);
-        px5[b] = scrX;
-        py5[b] = scrY;
+        px3[b] = scrX;
+        py3[b] = scrY;
       }
-      pl5[0] = 0;
-      for (let p = 1; p < 5; p++) {
-        const dx = px5[p] - px5[p - 1];
-        const dy = py5[p] - py5[p - 1];
-        pl5[p] = pl5[p - 1] + Math.hypot(dx, dy);
-      }
-      const total = pl5[4] || 1;
+      pl3[0] = 0;
+      const d01 = Math.hypot(px3[1] - px3[0], py3[1] - py3[0]);
+      const d12 = Math.hypot(px3[2] - px3[1], py3[2] - py3[1]);
+      pl3[1] = d01;
+      pl3[2] = d01 + d12;
+      const total = pl3[2] || 1;
       for (let n = 0; n < PATH_N; n++) {
-        polyPoint((n / (PATH_N - 1)) * total);
-        PATH[n * 2] = scrX;
-        PATH[n * 2 + 1] = scrY;
+        const dist = (n / (PATH_N - 1)) * total;
+        const seg = dist <= pl3[1] ? 1 : 2;
+        const span = pl3[seg] - pl3[seg - 1] || 1;
+        const t = (dist - pl3[seg - 1]) / span;
+        PATH[n * 2] = px3[seg - 1] + (px3[seg] - px3[seg - 1]) * t;
+        PATH[n * 2 + 1] = py3[seg - 1] + (py3[seg] - py3[seg - 1]) * t;
       }
-      for (let u = 0; u < 4; u++) stationU[u] = pl5[u + 1] / total;
+      stationU[0] = 0;
+      stationU[1] = pl3[1] / total;
+      stationU[2] = 1;
       projectXY(trayX + trayW * 0.5, trayY + trayD * 0.5, slabH + 0.04);
       trayScrX = scrX;
       trayScrY = scrY;
@@ -737,28 +807,33 @@ export default function HeroCommandCenter() {
         const d = docs[i];
         if (d.dead || d.phase === "fade") continue;
         flowing++;
-        if (d.phase === "arrive" || d.u < stationU[1]) return false;
+        if (d.phase === "arrive" || (d.phase === "run" && d.step < 2)) return false;
       }
       return flowing < 2;
     }
 
     function updateVisual(doc: Doc) {
-      let st = doc.phase === "deliver" || doc.phase === "fade" ? 3 : doc.seg >> 1;
-      if (st > 3) st = 3;
-      doc.visual = st >= 2 ? 2 : st >= 1 ? 1 : 0;
+      if (doc.phase === "deliver" || doc.phase === "fade" || doc.step >= 3) {
+        doc.visual = 2;
+        return;
+      }
+      doc.visual = doc.step === 2 ? 1 : 0;
     }
 
-    function beginSeg(doc: Doc) {
-      const seg = doc.seg;
-      const move = (seg & 1) === 0;
-      const base = move ? MOVE[seg >> 1] : PROC[seg >> 1];
+    function beginStep(doc: Doc) {
+      const step = doc.step;
+      const move = step === 1 || step === 3;
+      const base = STEP_MS[step];
       doc.dur = base;
       doc.left = base;
       if (move) {
-        doc.u0 = seg === 0 ? 0 : stationU[(seg >> 1) - 1];
-        doc.u1 = stationU[seg >> 1];
+        const from = step === 1 ? 0 : 1;
+        const to = step === 1 ? 1 : 2;
+        doc.u0 = stationU[from];
+        doc.u1 = stationU[to];
       } else {
-        doc.u0 = stationU[seg >> 1];
+        const at = step === 0 ? 0 : 1;
+        doc.u0 = stationU[at];
         doc.u1 = doc.u0;
         doc.u = doc.u0;
       }
@@ -766,12 +841,12 @@ export default function HeroCommandCenter() {
     }
 
     function spawnAuto() {
-      if (docCount >= 8) return;
+      if (docCount >= 6) return;
       const doc = pool.pop();
       if (!doc) return;
       doc.dead = false;
       doc.phase = "arrive";
-      doc.seg = 0;
+      doc.step = 0;
       doc.visual = 0;
       doc.u = 0;
       doc.u0 = 0;
@@ -784,20 +859,20 @@ export default function HeroCommandCenter() {
     function advance(doc: Doc) {
       if (doc.phase === "arrive") {
         doc.phase = "run";
-        doc.seg = 0;
-        beginSeg(doc);
+        doc.step = 0;
+        beginStep(doc);
         return;
       }
       if (doc.phase === "run") {
-        if (doc.seg < 7) {
-          doc.seg += 1;
-          beginSeg(doc);
+        if (doc.step < 3) {
+          doc.step += 1;
+          beginStep(doc);
           return;
         }
         doc.phase = "deliver";
         doc.dur = DELIVER;
         doc.left = DELIVER;
-        doc.u = stationU[3];
+        doc.u = stationU[2];
         updateVisual(doc);
         return;
       }
@@ -826,31 +901,42 @@ export default function HeroCommandCenter() {
       spawnLeft -= stepDt * motion;
       if (spawnLeft > 0) return;
       if (!canSpawn()) {
-        spawnLeft = 0.22;
+        spawnLeft = 0.2;
         return;
       }
       spawnAuto();
-      spawnLeft = 0.35;
+      spawnLeft = 0.55;
     }
 
     function affect(doc: Doc) {
       if (doc.dead) return;
       let idx = 0;
-      let amount = 0.4;
+      let amount = 0.45;
       let mode = 0;
       if (doc.phase === "arrive") {
         idx = 0;
-        amount = 0.7;
+        amount = 0.75;
         mode = 0;
       } else if (doc.phase === "deliver" || doc.phase === "fade") {
-        idx = 3;
+        idx = 2;
         amount = 1;
-        mode = 3;
+        mode = 2;
+      } else if (doc.step <= 0) {
+        idx = 0;
+        amount = 0.9;
+        mode = 0;
+      } else if (doc.step === 1) {
+        idx = 1;
+        amount = 0.6;
+        mode = 1;
+      } else if (doc.step === 2) {
+        idx = 1;
+        amount = 1;
+        mode = 1;
       } else {
-        idx = doc.seg >> 1;
-        if (idx > 3) idx = 3;
-        amount = (doc.seg & 1) === 1 ? 1 : 0.55;
-        mode = doc.visual >= 2 ? 3 : 0;
+        idx = 2;
+        amount = 0.72;
+        mode = 2;
       }
       const st = stations[idx];
       if (amount > st.want) st.want = amount;
@@ -876,13 +962,13 @@ export default function HeroCommandCenter() {
         else docs[w++] = doc;
       }
       docCount = w;
-      for (let s = 0; s < 4; s++) {
+      for (let s = 0; s < ST_N; s++) {
         stations[s].want = 0;
         stations[s].wantMode = 0;
       }
       for (let k = 0; k < docCount; k++) affect(docs[k]);
       const light = Math.min(1, raw * 7);
-      for (let n = 0; n < 4; n++) {
+      for (let n = 0; n < ST_N; n++) {
         const st = stations[n];
         st.heat += (st.want - st.heat) * light;
         if (st.want > 0.2) st.mode = st.wantMode;
@@ -930,12 +1016,12 @@ export default function HeroCommandCenter() {
     }
 
     function drawStationsLive() {
-      const names = tall ? ST_TALL : ST_WIDE;
-      for (let s = 0; s < 4; s++) {
+      const names = short ? ST_TALL : ST_WIDE;
+      for (let s = 0; s < ST_N; s++) {
         const st = stations[s];
         if (st.heat > 0.03) {
           const sprite = glowSprites[st.mode] || glowSprites[0];
-          const size = unit * (2.4 + st.heat);
+          const size = unit * (2.2 + st.heat * 0.85);
           ctx.globalAlpha = 0.28 + st.heat * 0.45;
           ctx.drawImage(sprite, st.sx - size * 0.5, st.sy - size * 0.5, size, size);
           ctx.globalAlpha = 0.18 + st.heat * 0.28;
@@ -952,10 +1038,10 @@ export default function HeroCommandCenter() {
       }
       ctx.globalAlpha = 1;
       ctx.font = fontLabel;
-      ctx.textAlign = tall ? "left" : "center";
-      ctx.textBaseline = "middle";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "bottom";
       ctx.fillStyle = "#ddd6fe";
-      for (let n = 0; n < 4; n++) {
+      for (let n = 0; n < ST_N; n++) {
         ctx.fillText(names[n], stations[n].lx, stations[n].ly);
       }
     }
@@ -984,11 +1070,14 @@ export default function HeroCommandCenter() {
         const dur = doc.dur > 0 ? doc.dur : 1;
         const t = smooth(1 - doc.left / dur);
         glowA = 0.2 + t * 0.42;
-        glowMode = 3;
+        glowMode = 2;
       } else if (doc.phase === "fade") {
         alpha = doc.left > 0 ? doc.left / doc.dur : 0;
         glowA = 0.5 * alpha;
-        glowMode = 3;
+        glowMode = 2;
+      } else if (doc.step === 2) {
+        glowA = 0.28;
+        glowMode = 1;
       }
       if (glowA > 0.02) {
         const sprite = glowSprites[glowMode] || glowSprites[0];
@@ -1104,8 +1193,7 @@ export default function HeroCommandCenter() {
 
     glowSprites[0] = makeGlow(139, 92, 246);
     glowSprites[1] = makeGlow(245, 193, 108);
-    glowSprites[2] = makeGlow(240, 113, 120);
-    glowSprites[3] = makeGlow(125, 220, 176);
+    glowSprites[2] = makeGlow(125, 220, 176);
     makeDocSprites();
     layout();
     if (builtCache) draw();
@@ -1148,7 +1236,7 @@ export default function HeroCommandCenter() {
     <div
       ref={hostRef}
       aria-hidden="true"
-      className="relative h-[420px] w-full min-w-0 max-w-full overflow-hidden sm:h-[480px] lg:h-[560px]"
+      className="relative h-[420px] w-full min-w-0 max-w-full overflow-hidden bg-brand-black sm:h-[480px] lg:h-[560px]"
     >
       <canvas ref={canvasRef} className="pointer-events-none block h-full w-full" />
     </div>
