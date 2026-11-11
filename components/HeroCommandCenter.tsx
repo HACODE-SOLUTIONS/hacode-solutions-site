@@ -4,26 +4,34 @@ import { useEffect, useRef } from "react";
 
 /**
  * Hero mark. Plays the official HACODE construction, then rests on the
- * glass cube (sheet frame 9).
+ * glass cube.
  *
  * 1 hexagon outline
  * 2 isometric cube (edges from the center to the top, lower-left, lower-right)
  * 3 three rounded slabs draw in along the stack
  * 4 cube wire falls away
- * 5 slabs fill in brand color (back cyan, middle blue, front purple)
- * 6–9 the glass cube returns and takes its color: soft blue left face,
- *    light right face, soft purple bottom face
+ * 5 slabs fill in the dark-site logo colors: back cyan, middle white, front purple
+ * 6–9 the glass cube returns: soft cyan on the left, a white-tinted top,
+ *    soft purple on the remaining face
  *
  * Slab geometry is the path from public/brand/logo-cyan-white-purple.svg
  * (viewBox 0 0 777 897.2). Cube vertices are that file's construction planes.
- * Icons sit in the hexagon's corner gaps only after the glass has settled.
+ * Nothing is drawn around the cube.
  */
 
 const BG = "#0A0A0B";
 const CYAN = "#5EC2FF";
-const MID = "#4E86FF";
+const WHITE = "#FFFFFF";
 const PURPLE = "#7448FF";
 const INK = "#F4F6FF";
+
+// Glass stops are only white mixed into #5EC2FF or #7448FF.
+const GLASS_LEFT_HI: RGB = [175, 225, 255];
+const GLASS_LEFT_LO: RGB = [94, 194, 255];
+const GLASS_TOP_HI: RGB = [255, 255, 255];
+const GLASS_TOP_LO: RGB = [247, 252, 255];
+const GLASS_REST_HI: RGB = [186, 164, 255];
+const GLASS_REST_LO: RGB = [116, 72, 255];
 
 const VB_W = 777;
 const VB_H = 897.2;
@@ -48,27 +56,13 @@ const SLAB_D =
   "M360.11,693.31l-169.89-98.09c-17.54-10.13-28.35-28.84-28.35-49.1v-196.17c0-43.64,47.25-70.92,85.04-49.1l169.89,98.09c17.54,10.13,28.35,28.84,28.35,49.1v196.17c0,43.64-47.25,70.92-85.04,49.1Z";
 
 const SLAB_STEP: Pt = [84.99, -48.55];
-const SLAB_COLORS = [CYAN, MID, PURPLE];
+const SLAB_COLORS = [CYAN, WHITE, PURPLE];
 const SPREAD = 58;
 
 const CYCLE = 15.4;
 
 type Pt = readonly [number, number];
-type IconKind = "net" | "bars" | "screen" | "pie";
-
-interface IconSpec {
-  x: number;
-  y: number;
-  kind: IconKind;
-  phase: number;
-}
-
-const ICONS: IconSpec[] = [
-  { x: 112, y: 88, kind: "net", phase: 0.2 },
-  { x: 668, y: 96, kind: "bars", phase: 1.6 },
-  { x: 674, y: 804, kind: "screen", phase: 3.3 },
-  { x: 108, y: 808, kind: "pie", phase: 4.7 },
-];
+type RGB = readonly [number, number, number];
 
 interface Pose {
   hex: number;
@@ -79,9 +73,7 @@ interface Pose {
   fill: number[];
   glass: number;
   tint: number;
-  icon: number;
   floatY: number;
-  drift: number;
   glow: number;
   master: number;
   phase: string;
@@ -131,8 +123,6 @@ function poseAt(t: number): Pose {
   );
   const glass = span(t, 7.2, 8.55, easeInOut);
   const tint = span(t, 7.45, 8.7, easeInOut);
-  const iconIn = span(t, 8.8, 9.6, easeOutCubic);
-  const iconOut = span(t, 13.55, 14.1, easeInOut);
   const master = 1 - span(t, 13.75, 15.15, easeInOut);
   const idle = span(t, 8.4, 9.1, easeInOut) * (1 - span(t, 13.5, 14.5, easeInOut));
   const wire = 1 - span(t, 4.95, 5.75, easeInOut);
@@ -156,9 +146,7 @@ function poseAt(t: number): Pose {
     fill,
     glass,
     tint,
-    icon: iconIn * (1 - iconOut),
     floatY: Math.sin(t * 0.78) * 6.5 * idle,
-    drift: t,
     glow: (0.14 + fillAvg * 0.38 + glass * 0.26) * breathe * master,
     master,
     phase,
@@ -175,9 +163,7 @@ function finalPose(): Pose {
     fill: [1, 1, 1],
     glass: 1,
     tint: 1,
-    icon: 1,
     floatY: 0,
-    drift: 0,
     glow: 0.72,
     master: 1,
     phase: "final",
@@ -253,163 +239,6 @@ function faceGradient(
   grad.addColorStop(0, stop(hi));
   grad.addColorStop(1, stop(lo));
   return grad;
-}
-
-function roundRect(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  r: number,
-) {
-  const radius = Math.min(r, w * 0.5, h * 0.5);
-  ctx.beginPath();
-  ctx.moveTo(x + radius, y);
-  ctx.arcTo(x + w, y, x + w, y + h, radius);
-  ctx.arcTo(x + w, y + h, x, y + h, radius);
-  ctx.arcTo(x, y + h, x, y, radius);
-  ctx.arcTo(x, y, x + w, y, radius);
-  ctx.closePath();
-}
-
-function drawNetwork(ctx: CanvasRenderingContext2D, s: number) {
-  const r = s * 0.3;
-  const node = s * 0.1;
-  ctx.lineWidth = s * 0.068;
-  ctx.lineCap = "round";
-  ctx.strokeStyle = INK;
-  const nodes: Pt[] = [
-    [0, -r],
-    [r, 0],
-    [0, r],
-    [-r, 0],
-  ];
-  ctx.beginPath();
-  for (let i = 0; i < 4; i++) {
-    const a = nodes[i];
-    const b = nodes[(i + 1) % 4];
-    const mx = (a[0] + b[0]) * 0.5;
-    const my = (a[1] + b[1]) * 0.5;
-    const len = Math.hypot(mx, my) || 1;
-    const cx = (mx / len) * r * 1.26;
-    const cy = (my / len) * r * 1.26;
-    if (i === 0) ctx.moveTo(a[0], a[1]);
-    ctx.quadraticCurveTo(cx, cy, b[0], b[1]);
-  }
-  ctx.closePath();
-  ctx.stroke();
-  for (let i = 0; i < 4; i++) {
-    ctx.beginPath();
-    ctx.arc(nodes[i][0], nodes[i][1], node, 0, Math.PI * 2);
-    ctx.fillStyle = BG;
-    ctx.fill();
-    ctx.stroke();
-  }
-}
-
-function drawBars(ctx: CanvasRenderingContext2D, s: number) {
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  ctx.strokeStyle = INK;
-  ctx.fillStyle = INK;
-  ctx.lineWidth = s * 0.07;
-  const left = -s * 0.36;
-  const base = s * 0.3;
-  ctx.beginPath();
-  ctx.moveTo(left, -s * 0.34);
-  ctx.lineTo(left, base);
-  ctx.lineTo(s * 0.4, base);
-  ctx.stroke();
-  const heights = [0.32, 0.62, 0.46, 0.84];
-  const bw = s * 0.09;
-  let x = left + s * 0.07;
-  for (let i = 0; i < heights.length; i++) {
-    const bh = s * 0.52 * heights[i];
-    roundRect(ctx, x, base - bh, bw, bh, s * 0.02);
-    ctx.fill();
-    x += bw + s * 0.035;
-  }
-  const x0 = -s * 0.08;
-  const y0 = s * 0.02;
-  const x1 = s * 0.16;
-  const y1 = -s * 0.24;
-  ctx.strokeStyle = PURPLE;
-  ctx.fillStyle = PURPLE;
-  ctx.lineWidth = s * 0.075;
-  ctx.beginPath();
-  ctx.moveTo(x0, y0);
-  ctx.lineTo(x1, y1);
-  ctx.stroke();
-  const ang = Math.atan2(y1 - y0, x1 - x0);
-  const head = s * 0.15;
-  ctx.beginPath();
-  ctx.moveTo(x1, y1);
-  ctx.lineTo(
-    x1 - head * Math.cos(ang - 0.48),
-    y1 - head * Math.sin(ang - 0.48),
-  );
-  ctx.lineTo(
-    x1 - head * Math.cos(ang + 0.48),
-    y1 - head * Math.sin(ang + 0.48),
-  );
-  ctx.closePath();
-  ctx.fill();
-}
-
-function drawScreen(ctx: CanvasRenderingContext2D, s: number) {
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  ctx.strokeStyle = INK;
-  ctx.lineWidth = s * 0.07;
-  const w = s * 0.7;
-  const h = s * 0.44;
-  const top = -s * 0.32;
-  roundRect(ctx, -w * 0.5, top, w, h, s * 0.035);
-  ctx.stroke();
-  const foot = top + h;
-  ctx.beginPath();
-  ctx.moveTo(-s * 0.1, foot);
-  ctx.lineTo(-s * 0.1, s * 0.2);
-  ctx.lineTo(s * 0.1, s * 0.2);
-  ctx.lineTo(s * 0.1, foot);
-  ctx.moveTo(-s * 0.24, s * 0.2);
-  ctx.lineTo(s * 0.24, s * 0.2);
-  ctx.stroke();
-  ctx.strokeStyle = PURPLE;
-  ctx.lineWidth = s * 0.065;
-  ctx.beginPath();
-  ctx.moveTo(-s * 0.16, s * 0.0);
-  ctx.lineTo(-s * 0.02, -s * 0.14);
-  ctx.lineTo(s * 0.16, -s * 0.02);
-  ctx.stroke();
-}
-
-function drawPie(ctx: CanvasRenderingContext2D, s: number) {
-  const r = s * 0.28;
-  const gap = 0.16;
-  const a0 = -0.15;
-  const a1 = 0.95;
-  ctx.lineWidth = s * 0.155;
-  ctx.lineCap = "butt";
-  ctx.strokeStyle = PURPLE;
-  ctx.beginPath();
-  ctx.arc(0, 0, r, a1 + gap, Math.PI * 2 + a0 - gap);
-  ctx.stroke();
-  const mid = (a0 + a1) * 0.5;
-  const ox = Math.cos(mid) * s * 0.045;
-  const oy = Math.sin(mid) * s * 0.045;
-  ctx.strokeStyle = CYAN;
-  ctx.beginPath();
-  ctx.arc(ox, oy, r, a0, a1);
-  ctx.stroke();
-}
-
-function drawIcon(ctx: CanvasRenderingContext2D, kind: IconKind, s: number) {
-  if (kind === "net") drawNetwork(ctx, s);
-  else if (kind === "bars") drawBars(ctx, s);
-  else if (kind === "screen") drawScreen(ctx, s);
-  else drawPie(ctx, s);
 }
 
 function makeGlow() {
@@ -501,39 +330,39 @@ export default function HeroCommandCenter() {
       if (pose.glass <= 0.004 || pose.master <= 0.004) return;
       const tint = pose.tint;
       const veil = pose.glass * pose.master;
-      // Sheet frame 9, retuned so the same faces read on a near-black field:
-      // left soft blue, right the light face, bottom soft purple.
+      // Dark field, logo hues only. Left is soft cyan, the upper face is
+      // white, and the remaining face is soft purple.
       const faces: {
         pts: readonly Pt[];
         from: Pt;
         to: Pt;
-        hi: readonly [number, number, number];
-        lo: readonly [number, number, number];
+        hi: RGB;
+        lo: RGB;
         alpha: number;
       }[] = [
         {
           pts: FACE_LEFT,
           from: TOP,
           to: BOT_L,
-          hi: [120, 186, 255],
-          lo: [72, 142, 255],
-          alpha: mix(0.2, 0.7, tint),
+          hi: GLASS_LEFT_HI,
+          lo: GLASS_LEFT_LO,
+          alpha: mix(0.2, 0.62, tint),
         },
         {
           pts: FACE_RIGHT,
           from: TOP,
           to: BOT_R,
-          hi: [244, 250, 255],
-          lo: [198, 226, 255],
-          alpha: mix(0.22, 0.62, tint),
+          hi: GLASS_TOP_HI,
+          lo: GLASS_TOP_LO,
+          alpha: mix(0.22, 0.58, tint),
         },
         {
           pts: FACE_BOTTOM,
           from: MID_PT,
           to: BOT,
-          hi: [176, 150, 255],
-          lo: [116, 72, 255],
-          alpha: mix(0.18, 0.58, tint),
+          hi: GLASS_REST_HI,
+          lo: GLASS_REST_LO,
+          alpha: mix(0.18, 0.52, tint),
         },
       ];
       for (let i = 0; i < faces.length; i++) {
@@ -638,25 +467,6 @@ export default function HeroCommandCenter() {
       ctx.globalAlpha = 1;
     }
 
-    function drawIcons(pose: Pose) {
-      const alpha = pose.icon * pose.master;
-      if (alpha <= 0.004) return;
-      const size = 92;
-      ctx.lineJoin = "round";
-      for (let i = 0; i < ICONS.length; i++) {
-        const icon = ICONS[i];
-        const drift = pose.drift === 0 ? 0 : Math.sin(pose.drift * 0.42 + icon.phase);
-        const dx = drift * 11;
-        const dy = Math.cos(pose.drift * 0.37 + icon.phase) * 8;
-        ctx.save();
-        ctx.translate(icon.x + dx, icon.y + dy);
-        ctx.globalAlpha = alpha * 0.9;
-        drawIcon(ctx, icon.kind, size);
-        ctx.restore();
-      }
-      ctx.globalAlpha = 1;
-    }
-
     function paint() {
       if (!built) return;
       const pose = reduced ? finalPose() : poseAt(elapsed % CYCLE);
@@ -698,7 +508,6 @@ export default function HeroCommandCenter() {
       drawWire(pose);
       drawSlabs(pose);
       drawGlassEdge(pose);
-      drawIcons(pose);
 
       const elapsedMs = performance.now() - t0;
       if (frameIndex > 20 && !viewDirty) {
