@@ -3,20 +3,26 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Hero mark. Plays the official HACODE construction, then rests on the
- * glass cube.
+ * Hero mark. Builds the HACODE logo, holds, then plays the same
+ * construction backward to the hexagon outline and repeats.
  *
- * 1 hexagon outline
- * 2 isometric cube (edges from the center to the top, lower-left, lower-right)
- * 3 three rounded slabs draw in along the stack
- * 4 cube wire falls away
- * 5 slabs fill in the dark-site logo colors: back cyan, middle white, front purple
- * 6–9 the glass cube returns: soft cyan on the left, a white-tinted top,
- *    soft purple on the remaining face
+ * Forward, from the drawn hexagon outline:
+ * 1 isometric cube (edges from the center to the top, lower-left, lower-right)
+ * 2 three rounded slabs draw in along the stack
+ * 3 cube wire falls away
+ * 4 slabs fill: back #5EC2FF, middle #FFFFFF, front #7448FF
+ * 5 a colorless glass cube closes around them
  *
- * Slab geometry is the path from public/brand/logo-cyan-white-purple.svg
- * (viewBox 0 0 777 897.2). Cube vertices are that file's construction planes.
- * Nothing is drawn around the cube.
+ * The outer cube has no hue. Faces are faint white-to-gray highlights.
+ * Edges are white and gray. Only the three slabs carry the logo colors
+ * from public/brand/logo-cyan-white-purple.svg.
+ *
+ * Slab geometry is that file's path (viewBox 0 0 777 897.2). Cube vertices
+ * are its construction planes. Nothing is drawn around the cube.
+ *
+ * Playback speed eases to a stop at each end so the turnaround does not
+ * pop. Reduced motion shows the finished mark and does not loop.
+ * Off-screen and hidden tabs pause the clock.
  */
 
 const BG = "#0A0A0B";
@@ -25,13 +31,8 @@ const WHITE = "#FFFFFF";
 const PURPLE = "#7448FF";
 const INK = "#F4F6FF";
 
-// Glass stops are only white mixed into #5EC2FF or #7448FF.
-const GLASS_LEFT_HI: RGB = [175, 225, 255];
-const GLASS_LEFT_LO: RGB = [94, 194, 255];
-const GLASS_TOP_HI: RGB = [255, 255, 255];
-const GLASS_TOP_LO: RGB = [247, 252, 255];
-const GLASS_REST_HI: RGB = [186, 164, 255];
-const GLASS_REST_LO: RGB = [116, 72, 255];
+// Neutral glass. Equal channels only, so the cube cannot pick up a tint.
+const GLASS_LO: RGB = [196, 196, 196];
 
 const VB_W = 777;
 const VB_H = 897.2;
@@ -59,10 +60,26 @@ const SLAB_STEP: Pt = [84.99, -48.55];
 const SLAB_COLORS = [CYAN, WHITE, PURPLE];
 const SPREAD = 58;
 
-const CYCLE = 15.4;
+// Construction clock. 1.65 is the drawn hexagon outline, before the spokes.
+// 8.7 is the finished glass mark. The loop rests on that outline so the
+// reverse does not wipe the stroke down to a blank frame.
+const HEX_AT = 1.65;
+const MARK_AT = 8.7;
+const BUILD_SPAN = MARK_AT - HEX_AT;
+const EASE_WINDOW = 0.75;
+const PLAY = BUILD_SPAN + EASE_WINDOW;
+const HOLD_MARK = 1.8;
+const HOLD_HEX = 0.9;
+const LOOP = PLAY + HOLD_MARK + PLAY + HOLD_HEX;
 
 type Pt = readonly [number, number];
 type RGB = readonly [number, number, number];
+type Segment = "forward" | "hold" | "reverse" | "hexagon";
+
+interface LoopSample {
+  t: number;
+  segment: Segment;
+}
 
 interface Pose {
   hex: number;
@@ -123,19 +140,16 @@ function poseAt(t: number): Pose {
   );
   const glass = span(t, 7.2, 8.55, easeInOut);
   const tint = span(t, 7.45, 8.7, easeInOut);
-  const master = 1 - span(t, 13.75, 15.15, easeInOut);
-  const idle = span(t, 8.4, 9.1, easeInOut) * (1 - span(t, 13.5, 14.5, easeInOut));
+  const master = 1;
   const wire = 1 - span(t, 4.95, 5.75, easeInOut);
   const fillAvg = (fill[0] + fill[1] + fill[2]) / 3;
-  const breathe = 1 + Math.sin(t * 1.15) * 0.04 * idle;
 
   let phase = "hexagon";
-  if (t >= 13.75) phase = "recede";
-  else if (t >= 8.7) phase = "idle";
-  else if (t >= 7.2) phase = "glass";
-  else if (t >= 5.9) phase = "mark";
-  else if (t >= 4.95) phase = "slabs";
-  else if (t >= 1.65) phase = "cube";
+  if (t > HEX_AT) phase = "cube";
+  if (t >= 4.95) phase = "slabs";
+  if (t >= 5.9) phase = "mark";
+  if (t >= 7.2) phase = "glass";
+  if (t >= MARK_AT) phase = "idle";
 
   return {
     hex: span(t, 0.06, 1.12, easeOutCubic),
@@ -146,8 +160,8 @@ function poseAt(t: number): Pose {
     fill,
     glass,
     tint,
-    floatY: Math.sin(t * 0.78) * 6.5 * idle,
-    glow: (0.14 + fillAvg * 0.38 + glass * 0.26) * breathe * master,
+    floatY: 0,
+    glow: (0.08 + fillAvg * 0.16 + glass * 0.1) * master,
     master,
     phase,
   };
@@ -164,10 +178,47 @@ function finalPose(): Pose {
     glass: 1,
     tint: 1,
     floatY: 0,
-    glow: 0.72,
+    glow: 0.34,
     master: 1,
     phase: "final",
   };
+}
+
+// Distance along the construction for wall-clock `local` in [0, PLAY].
+// Speed is 0 at both ends and 1 through the middle, so a hold can freeze
+// the pose without a velocity pop. The ramp is symmetric, which makes
+// PLAY - local the exact reverse of local.
+function buildDistance(local: number): number {
+  const w = EASE_WINDOW;
+  if (local <= 0) return 0;
+  if (local >= PLAY) return BUILD_SPAN;
+  if (local < w) {
+    const x = local / w;
+    return w * (x * x * x * (1 - 0.5 * x));
+  }
+  if (local > PLAY - w) {
+    const x = (local - (PLAY - w)) / w;
+    const ramp = w * (x - x * x * x * (1 - 0.5 * x));
+    return w * 0.5 + (PLAY - 2 * w) + ramp;
+  }
+  return w * 0.5 + (local - w);
+}
+
+function sampleLoop(elapsed: number): LoopSample {
+  let local = elapsed % LOOP;
+  if (local < 0) local += LOOP;
+  if (local < PLAY) {
+    return { t: HEX_AT + buildDistance(local), segment: "forward" };
+  }
+  local -= PLAY;
+  if (local < HOLD_MARK) {
+    return { t: MARK_AT, segment: "hold" };
+  }
+  local -= HOLD_MARK;
+  if (local < PLAY) {
+    return { t: MARK_AT - buildDistance(local), segment: "reverse" };
+  }
+  return { t: HEX_AT, segment: "hexagon" };
 }
 
 function strokeChain(
@@ -225,20 +276,19 @@ function strokePoly(ctx: CanvasRenderingContext2D, pts: readonly Pt[]) {
   ctx.stroke();
 }
 
-function faceGradient(
+function fillNeutralFace(
   ctx: CanvasRenderingContext2D,
+  pts: readonly Pt[],
   from: Pt,
   to: Pt,
-  hi: readonly [number, number, number],
-  lo: readonly [number, number, number],
-  tint: number,
+  hiAlpha: number,
+  loAlpha: number,
 ) {
   const grad = ctx.createLinearGradient(from[0], from[1], to[0], to[1]);
-  const stop = (c: readonly [number, number, number]) =>
-    rgba(mix(255, c[0], tint), mix(255, c[1], tint), mix(255, c[2], tint), 1);
-  grad.addColorStop(0, stop(hi));
-  grad.addColorStop(1, stop(lo));
-  return grad;
+  grad.addColorStop(0, rgba(255, 255, 255, hiAlpha));
+  grad.addColorStop(1, rgba(GLASS_LO[0], GLASS_LO[1], GLASS_LO[2], loAlpha));
+  ctx.fillStyle = grad;
+  fillPoly(ctx, pts);
 }
 
 function makeGlow() {
@@ -247,16 +297,11 @@ function makeGlow() {
   c.height = 384;
   const g = c.getContext("2d");
   if (!g) return c;
-  const purple = g.createRadialGradient(214, 188, 8, 200, 196, 188);
-  purple.addColorStop(0, "rgba(116,72,255,0.50)");
-  purple.addColorStop(0.42, "rgba(116,72,255,0.16)");
-  purple.addColorStop(1, "rgba(116,72,255,0)");
-  g.fillStyle = purple;
-  g.fillRect(0, 0, 384, 384);
-  const cyan = g.createRadialGradient(142, 236, 4, 150, 230, 140);
-  cyan.addColorStop(0, "rgba(94,194,255,0.40)");
-  cyan.addColorStop(1, "rgba(94,194,255,0)");
-  g.fillStyle = cyan;
+  const halo = g.createRadialGradient(192, 200, 12, 192, 200, 176);
+  halo.addColorStop(0, "rgba(255,255,255,0.22)");
+  halo.addColorStop(0.46, "rgba(255,255,255,0.06)");
+  halo.addColorStop(1, "rgba(255,255,255,0)");
+  g.fillStyle = halo;
   g.fillRect(0, 0, 384, 384);
   return c;
 }
@@ -330,53 +375,39 @@ export default function HeroCommandCenter() {
       if (pose.glass <= 0.004 || pose.master <= 0.004) return;
       const tint = pose.tint;
       const veil = pose.glass * pose.master;
-      // Dark field, logo hues only. Left is soft cyan, the upper face is
-      // white, and the remaining face is soft purple.
-      const faces: {
-        pts: readonly Pt[];
-        from: Pt;
-        to: Pt;
-        hi: RGB;
-        lo: RGB;
-        alpha: number;
-      }[] = [
-        {
-          pts: FACE_LEFT,
-          from: TOP,
-          to: BOT_L,
-          hi: GLASS_LEFT_HI,
-          lo: GLASS_LEFT_LO,
-          alpha: mix(0.2, 0.62, tint),
-        },
-        {
-          pts: FACE_RIGHT,
-          from: TOP,
-          to: BOT_R,
-          hi: GLASS_TOP_HI,
-          lo: GLASS_TOP_LO,
-          alpha: mix(0.22, 0.58, tint),
-        },
-        {
-          pts: FACE_BOTTOM,
-          from: MID_PT,
-          to: BOT,
-          hi: GLASS_REST_HI,
-          lo: GLASS_REST_LO,
-          alpha: mix(0.18, 0.52, tint),
-        },
-      ];
-      for (let i = 0; i < faces.length; i++) {
-        const face = faces[i];
-        ctx.globalAlpha = veil * face.alpha;
-        ctx.fillStyle = faceGradient(ctx, face.from, face.to, face.hi, face.lo, tint);
-        fillPoly(ctx, face.pts);
-      }
-      ctx.globalAlpha = veil * 0.34;
+      // Colorless glass. The right face carries the faint highlight,
+      // the left face is quieter, and the bottom face is barely there.
+      ctx.globalAlpha = veil;
+      fillNeutralFace(
+        ctx,
+        FACE_LEFT,
+        TOP,
+        BOT_L,
+        mix(0.03, 0.09, tint),
+        mix(0.012, 0.035, tint),
+      );
+      fillNeutralFace(
+        ctx,
+        FACE_RIGHT,
+        TOP,
+        BOT_R,
+        mix(0.05, 0.16, tint),
+        mix(0.018, 0.055, tint),
+      );
+      fillNeutralFace(
+        ctx,
+        FACE_BOTTOM,
+        MID_PT,
+        BOT,
+        mix(0.016, 0.05, tint),
+        mix(0.006, 0.018, tint),
+      );
+      ctx.globalAlpha = veil * 0.5;
       ctx.lineCap = "round";
       ctx.lineJoin = "miter";
       ctx.miterLimit = 2;
-      ctx.lineWidth = 4.5;
-      ctx.strokeStyle = "rgba(255,255,255,0.32)";
+      ctx.lineWidth = 3.4;
+      ctx.strokeStyle = "rgba(255,255,255,0.28)";
       for (let i = 0; i < SPOKES.length; i++) {
         ctx.beginPath();
         ctx.moveTo(MID_PT[0], MID_PT[1]);
@@ -392,11 +423,14 @@ export default function HeroCommandCenter() {
       ctx.lineCap = "round";
       ctx.lineJoin = "miter";
       ctx.miterLimit = 2;
-      ctx.lineWidth = 7;
-      ctx.strokeStyle = "rgba(255,255,255,0.78)";
+      ctx.lineWidth = 11;
+      ctx.strokeStyle = "rgba(255,255,255,0.08)";
       strokePoly(ctx, HEX);
-      ctx.lineWidth = 3.2;
-      ctx.strokeStyle = "rgba(255,255,255,0.95)";
+      ctx.lineWidth = 5.2;
+      ctx.strokeStyle = "rgba(214,214,214,0.55)";
+      strokePoly(ctx, HEX);
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = "rgba(255,255,255,0.78)";
       ctx.beginPath();
       ctx.moveTo(TOP_L[0], TOP_L[1]);
       ctx.lineTo(TOP[0], TOP[1]);
@@ -469,7 +503,17 @@ export default function HeroCommandCenter() {
 
     function paint() {
       if (!built) return;
-      const pose = reduced ? finalPose() : poseAt(elapsed % CYCLE);
+      let segment = "final";
+      let pose: Pose;
+      if (reduced) {
+        pose = finalPose();
+      } else {
+        const sampled = sampleLoop(elapsed);
+        segment = sampled.segment;
+        pose = poseAt(sampled.t);
+        if (segment === "hold") pose.phase = "hold";
+        else if (segment === "hexagon") pose.phase = "hexagon";
+      }
       const t0 = performance.now();
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -526,6 +570,7 @@ export default function HeroCommandCenter() {
           meter.frameMs =
             workSum / (workCount < workRing.length ? workCount : workRing.length);
           stage.dataset.phase = pose.phase;
+          stage.dataset.segment = segment;
         }
       }
     }
@@ -539,7 +584,7 @@ export default function HeroCommandCenter() {
       if (dt < 0) dt = 0;
       if (dt > 0.05) dt = 0.05;
       elapsed += dt;
-      if (elapsed > CYCLE * 4) elapsed -= CYCLE * 4;
+      if (elapsed > LOOP * 4) elapsed -= LOOP * 4;
 
       if (viewDirty || (frameIndex & 31) === 0) {
         const rw = stage.clientWidth;
