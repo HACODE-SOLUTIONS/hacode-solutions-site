@@ -673,7 +673,7 @@ export default function HeroCommandCenter() {
     <div
       ref={hostRef}
       aria-hidden="true"
-      className="relative h-[420px] w-full min-w-0 max-w-full overflow-hidden bg-brand-black sm:h-[480px] lg:h-[560px]"
+      className="relative order-first mx-auto aspect-[777/897.2] w-[62vw] max-w-[460px] min-w-0 justify-self-center overflow-hidden bg-brand-black lg:order-none lg:mx-0 lg:aspect-auto lg:h-[560px] lg:w-full lg:max-w-full lg:justify-self-stretch"
     >
       <canvas ref={canvasRef} className="pointer-events-none block h-full w-full" />
     </div>
